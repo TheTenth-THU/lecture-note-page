@@ -1,0 +1,57 @@
+/* --- Obsidian Callout --- */
+
+blockquote {
+  margin-block: 1rem;
+  padding: 1rem;
+  border-radius: 0.25rem;
+  border-left-width: 4px;
+  background-color: rgba(128, 128, 128, 0.1);
+}
+
+.callout-title {
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+blockquote[data-callout="info"] {
+  border-left-color: #3b82f6; /* 蓝色 */
+}
+blockquote[data-callout="info"] .callout-title {
+  color: #3b82f6;
+}
+
+blockquote[data-callout="warning"] {
+  border-left-color: #f59e0b; /* 黄色 */
+}
+blockquote[data-callout="warning"] .callout-title {
+  color: #f59e0b;
+}
+
+blockquote[data-callout="success"] {
+  border-left-color: #22c55e; /* 绿色 */
+}
+blockquote[data-callout="success"] .callout-title {
+  color: #22c55e;
+}
+
+blockquote[data-callout="danger"],
+blockquote[data-callout="error"] {
+  border-left-color: #ef4444; /* 红色 */
+}
+blockquote[data-callout="danger"] .callout-title,
+blockquote[data-callout="error"] .callout-title {
+  color: #ef4444;
+}
+
+.dark blockquote {
+    background-color: rgba(128, 128, 128, 0.15);
+}
+
+/* --- KaTeX Styles --- */
+
+.katex .katex-html {
+    display: none;
+}
