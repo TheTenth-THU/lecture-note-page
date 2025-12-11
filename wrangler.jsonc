@@ -4,6 +4,12 @@
  */
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
+	"routes": [
+		{
+			"pattern": "notes.zhenxing.space",
+			"custom_domain": true
+		}
+	],
 	"name": "lecture-note-page",
 	"main": ".open-next/worker.js",
 	"compatibility_date": "2025-03-01",

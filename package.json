@@ -17,7 +17,7 @@
 		"@opennextjs/cloudflare": "^1.14.2",
 		"clsx": "^2.1.1",
 		"gray-matter": "^4.0.3",
-		"next": "15.5.7",
+		"next": "^16.0.8",
 		"next-mdx-remote": "^5.0.0",
 		"react": "19.1.2",
 		"react-dom": "19.1.2",
@@ -36,8 +36,17 @@
 		"@types/react-dom": "^19",
 		"eslint": "^9",
 		"eslint-config-next": "15.4.6",
+		"prettier": "^3.7.4",
+		"prettier-plugin-tailwindcss": "^0.7.2",
 		"tailwindcss": "^4",
 		"typescript": "^5",
 		"wrangler": "^4.53.0"
+	},
+	"prettier": {
+		"bracketSameLine": true,
+		"experimentalTernaries": true,
+		"plugins": [
+			"prettier-plugin-tailwindcss"
+		]
 	}
 }

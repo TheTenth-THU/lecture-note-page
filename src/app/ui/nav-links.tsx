@@ -12,24 +12,14 @@ import { usePathname } from "next/navigation";
 
 const links = [
   {
-    name: "Home",
-    href: "/",
+    name: "Home Page",
+    href: "www.zhenxing.space",
     icon: HomeIcon,
   },
   {
-    name: "Schoolwork",
-    href: "/schoolwork",
-    icon: AcademicCapIcon,
-  },
-  {
-    name: "Publications",
-    href: "/publications",
+    name: "Courses",
+    href: "/",
     icon: DocumentTextIcon,
-  },
-  {
-    name: "Projects",
-    href: "/projects",
-    icon: UserGroupIcon,
   },
 ];
 
@@ -47,7 +37,7 @@ export default function NavLinks({ isShrunk }: { isShrunk: boolean }) {
         return (
           <Link
             key={link.name}
-            href={link.href}
+            href={link.href.startsWith("/") ? link.href : `https://${link.href}`}
             className={clsx(
               /* --- Base styles --- */
               "flex grow items-center justify-center",
