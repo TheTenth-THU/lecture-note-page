@@ -1,7 +1,16 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-	/* config options here */
+  /* config options here */
+  transpilePackages: [
+    "next-mdx-remote",
+    "gray-matter",
+    "remark-gfm",
+    "remark-math",
+    "remark-obsidian-callout",
+    "remark-wiki-link",
+    "rehype-raw",
+  ],
 };
 
 export default nextConfig;
