@@ -160,7 +160,6 @@ export async function GET(request: NextRequest) {
     const mdxSource = await serialize(content, {
       mdxOptions: {
         remarkPlugins: [
-          remarkMath,
           remarkGfm,
           [
             remarkObsidianCallout,
@@ -172,6 +171,7 @@ export async function GET(request: NextRequest) {
               isFoldable: false,
             },
           ],
+          remarkMath,
           [
             remarkWikiLink,
             {

@@ -54,7 +54,7 @@ export function Header() {
           className={`mt-2 mb-1 font-bold transition-all duration-300 ease-in-out ${
             isShrunk ? "text-2xl" : "text-4xl"
           }`}>
-          Lecture Notes <span className={`${runYuanSerif.className} ${isShrunk ? "text-xl" : "text-3xl"}`}>课程笔记</span>
+          Lecture Notes <span className={`${runYuanSerif.className} ${isShrunk ? "text-2xl" : "text-3xl"}`}>课程笔记</span>
         </h1>
         <p className={clsx("text-base transition-opacity", isShrunk ? "opacity-0" : "opacity-100")}>
           {/* CHEN Zhen-Xing <span className={runYuanSerif.className}>陈禛兴</span>
