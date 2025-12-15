@@ -1,15 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
 import matter from "gray-matter";
 import { serialize } from "next-mdx-remote/serialize";
+import { visit } from "unist-util-visit";
+
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
-import remarkObsidianCallout from "remark-obsidian-callout";
+import remarkObsidian from "remark-obsidian";
 import remarkWikiLink from "remark-wiki-link";
+import remarkObsidianCallout from "remark-obsidian-callout";
+
 import rehypeRaw from "rehype-raw";
 // import rehypeKatex from "rehype-katex";
 import rehypeMathToTex from "@/lib/rehype-math-to-tex";
 
 import { getCloudflareContext } from "@opennextjs/cloudflare";
+import remarkMathToTex from "@/lib/remark-math-to-tex";
 
 interface GitHubFileResponse {
   type: string;
@@ -25,6 +30,29 @@ interface GitHubDirectoryDetailTerm {
   path: string;
   children?: GitHubDirectoryDetailTerm[];
 }
+
+/**
+ * Markdown 解析调试插件
+ * 将 AST 树打印到控制台，方便调试使用
+ * @returns {function} Remark 插件函数
+ */
+const debugPlugin = () => {
+  return (tree: any) => {
+    console.log("--- AST DEBUG START ---");
+
+    // 打印整个树结构（注意：树可能很大，建议只打印部分或使用 JSON.stringify）
+    console.log(JSON.stringify(tree, null, 2));
+
+    // // 或者只查看特定类型的节点，例如查看所有的数学公式节点
+    // visit(tree, (node) => {
+    //   if (node.type === "math" || node.type === "inlineMath") {
+    //     console.log("Found math node:", node);
+    //   }
+    // });
+
+    console.log("--- AST DEBUG END ---");
+  };
+};
 
 export async function GET(request: NextRequest) {
   // 从环境变量中获取 GitHub 仓库信息
@@ -157,21 +185,11 @@ export async function GET(request: NextRequest) {
     }
 
     // 序列化 MDX 内容
+    console.log("Serializing MDX content for page:", page);
     const mdxSource = await serialize(content, {
       mdxOptions: {
         remarkPlugins: [
           remarkGfm,
-          [
-            remarkObsidianCallout,
-            {
-              // This option ensures the content inside the callout is still processed as Markdown
-              useDataAttributes: false,
-              // This option tells the plugin to parse the content inside the callout
-              // instead of treating it as a raw string.
-              isFoldable: false,
-            },
-          ],
-          remarkMath,
           [
             remarkWikiLink,
             {
@@ -179,6 +197,11 @@ export async function GET(request: NextRequest) {
               hrefTemplate: (permalink: string) => `/${permalink}`,
             },
           ],
+          remarkMath,
+          remarkMathToTex,
+          // debugPlugin,
+          // remarkObsidian,
+          remarkObsidianCallout,
         ],
         rehypePlugins: [
           rehypeRaw,
@@ -188,6 +211,7 @@ export async function GET(request: NextRequest) {
       },
       parseFrontmatter: false,
     });
+    console.log("MDX serialization complete for page:", page);
 
     return NextResponse.json(
       {
