@@ -18,6 +18,21 @@
 	}
 }
 
+.scrollbar-thin {
+  scrollbar-width: thin; /* Firefox */
+  scrollbar-color: #400649 transparent; /* thumb track */
+}
+.scrollbar-thin::-webkit-scrollbar {
+	width: 8px;
+}
+.scrollbar-thin::-webkit-scrollbar-track {
+	background: transparent;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb {
+	background-color: #400649;
+	border-radius: 4px;
+}
+
 body {
 	background: var(--background);
 	color: var(--foreground);

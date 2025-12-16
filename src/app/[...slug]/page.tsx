@@ -88,11 +88,13 @@ function CourseDropdown({
  * 目录列表组件，用于导航文件结构。
  */
 function RecursiveDirectoryList({
+  semester,
   items,
   onSelect,
   currentPath,
   leftMargin = 0,
 }: {
+  semester: string;
   items: GitHubDirectoryDetailTerm[];
   onSelect: (path: string) => void;
   currentPath?: string;
@@ -104,7 +106,7 @@ function RecursiveDirectoryList({
       style={{ marginLeft: leftMargin }}>
       {items.map((item) => (
         // 每个文件或目录项
-        <li key={item.path}>
+        <li key={item.path === "<scene>" ? item.path + Math.random() : item.path}>
           {
             item.type === "file" ?
               // 文件项
@@ -112,7 +114,7 @@ function RecursiveDirectoryList({
                 null
               : <button
                   className={`group flex w-full items-center rounded-md px-2 py-1.5 text-left text-sm transition-colors ${
-                    currentPath === item.path ?
+                    currentPath === `${semester}/${item.path}` ?
                       "bg-purple-100 font-medium text-[#660974] dark:bg-[#41044a] dark:text-purple-200"
                     : "text-gray-600 hover:bg-purple-50 hover:text-[#660974] dark:text-gray-300 hover:dark:bg-[#41044a] hover:dark:text-purple-200"
                   } `}
@@ -128,13 +130,18 @@ function RecursiveDirectoryList({
                 </button>
 
               // 目录项
+            : item.name.startsWith(".") ?
+              null
             : <div className="select-none">
-                <div className="flex items-center px-2 py-1.5 text-sm font-medium text-gray-900 dark:text-gray-100">
-                  <FolderOpenIcon className="mr-2 h-4 w-4 shrink-0 text-gray-400" />
-                  <span className="truncate">{item.name}/</span>
-                </div>
+                {item.name === "<scene>" ? null : (
+                  <div className="flex items-center px-2 py-1.5 text-sm font-medium text-gray-900 dark:text-gray-100">
+                    <FolderOpenIcon className="mr-2 h-4 w-4 shrink-0 text-gray-400" />
+                    <span className="truncate">{item.name}/</span>
+                  </div>
+                )}
                 {item.children && (
                   <RecursiveDirectoryList
+                    semester={semester}
                     items={item.children}
                     onSelect={onSelect}
                     currentPath={currentPath}
@@ -159,28 +166,34 @@ export default function DocPage() {
   const params = useParams();
   const router = useRouter();
 
-  // 解析 URL 参数
+  /**
+   * 解析 slug 参数
+   * @returns \{ `semester`: _string_; `course`: _string_; `docPath`: _string_; `fullPath`: _string_ \}
+   */
   const getParams = () => {
     // 处理空参数情况
-    if (!params?.slug) return { course: "", docPath: "" };
+    if (!params?.slug)
+      return { semester: "", course: "", docPath: "", fullPath: "" };
 
     const slugArray = Array.isArray(params.slug) ? params.slug : [params.slug];
-    // 第一个部分为课程名
-    const course = decodeURIComponent(slugArray[0]);
+    // slug 结构：semester/course/doc-path
+    const semester = decodeURIComponent(slugArray[0]);
+    const course = slugArray.length > 1 ? decodeURIComponent(slugArray[1]) : "";
     // 剩余部分重新组合为路径，如果只有一级则 docPath 为空
     const docPath =
-      slugArray.length > 1 ?
-        decodeURIComponent(slugArray.slice(1).join("/"))
+      slugArray.length > 2 ?
+        decodeURIComponent(slugArray.slice(2).join("/"))
       : "";
 
     return {
+      semester,
       course,
       docPath,
       fullPath: decodeURIComponent(slugArray.join("/")),
     };
   };
 
-  const { course: currentCourse, fullPath } = getParams();
+  const { semester, course: currentCourse, docPath, fullPath } = getParams();
 
   /**
    * State variables & their setter functions
@@ -207,7 +220,7 @@ export default function DocPage() {
   // 控制页眉缩小的状态
   const [isShrunk, setIsShrunk] = useState(false);
 
-  // 添加和移除滚动事件监听器
+  // 滚动事件
   useEffect(() => {
     const handleScroll = () => {
       if (window.scrollY > 50) {
@@ -231,7 +244,7 @@ export default function DocPage() {
     const fetchCourses = async () => {
       try {
         // 获取根目录内容
-        const res = await fetch(`/api/get-doc?page=/`);
+        const res = await fetch(`/api/get-doc?semester=${semester}&page=/`);
         if (!res.ok) {
           throw new Error(
             `Failed to fetch courses due to ${res.statusText}: ${await res.text()}`,
@@ -257,9 +270,12 @@ export default function DocPage() {
   // 当 currentCourse 变化时，获取该课程的详细结构
   useEffect(() => {
     // 如果没有选中课程则不执行
-    if (!currentCourse) return;
+    if (!semester || !currentCourse) return;
 
-    const fetchCourseStructure = async (curDir: string) => {
+    const fetchCourseStructure = async (
+      curSemester: string,
+      curDir: string,
+    ) => {
       // // 定义递归获取目录结构
       // const recursiveFetchCourseStructure = async (dir: string): Promise<GitHubDirectoryDetailTerm[]> => {
       //   // 获取目录 `curDir` 下的内容
@@ -294,10 +310,12 @@ export default function DocPage() {
       // }
 
       // 使用 recursive 参数调用 get-doc API 获取完整目录结构
-      const res = await fetch(`/api/get-doc?page=${curDir}&recursive=true`);
+      const res = await fetch(
+        `/api/get-doc?semester=${curSemester}&page=${curDir}&recursive=true`,
+      );
       if (!res.ok) {
         console.error(
-          `Failed to fetch course structure at "${curDir}": ${res.statusText}`,
+          `Failed to fetch ${curSemester} course "${curDir}" structure: ${res.statusText}`,
         );
         return;
       }
@@ -311,8 +329,8 @@ export default function DocPage() {
       setCourseStructure(data.details);
     };
 
-    fetchCourseStructure(currentCourse);
-  }, [currentCourse]);
+    fetchCourseStructure(semester, currentCourse);
+  }, [semester, currentCourse]);
 
   // 获取文档内容
   useEffect(() => {
@@ -324,9 +342,13 @@ export default function DocPage() {
       setError(null);
 
       try {
-        const res = await fetch(`/api/get-doc?page=${fullPath}`);
+        const res = await fetch(
+          `/api/get-doc?semester=${semester}&page=${currentCourse}/${docPath}`,
+        );
         if (!res.ok) {
-          throw new Error(`Failed to fetch document: ${res.statusText}`);
+          throw new Error(
+            `Failed to fetch document ${currentCourse}/${docPath}: ${res.statusText}`,
+          );
         }
         const data: DocResponse = await res.json();
 
@@ -346,7 +368,7 @@ export default function DocPage() {
               // 替换当前 URL，不推入历史记录以免回退死循环
               setDoc(null);
               setIsLoadingDoc(false);
-              router.replace(`/${indexFile.path}`);
+              router.replace(`/${semester}/${indexFile.path}`);
               return;
             }
             // 未找到，则查找第一个文件
@@ -354,12 +376,12 @@ export default function DocPage() {
             if (firstFile) {
               // 替换当前 URL，不推入历史记录以免回退死循环
               setDoc(null);
-              router.replace(`/${firstFile.path}`);
+              router.replace(`/${semester}/${firstFile.path}`);
             } else {
               // 只有文件夹，进入第一个文件夹
               const firstDir = data.details[0];
               setDoc(null);
-              router.replace(`/${firstDir.path}`);
+              router.replace(`/${semester}/${firstDir.path}`);
             }
           }
         } else if (data.type === "FILE") {
@@ -397,7 +419,7 @@ export default function DocPage() {
           children = children.replace("#", "");
         }
       } else if (href && href.startsWith("wiki://")) {
-        finalHref = href.replace("wiki://", `/${currentCourse}/`);
+        finalHref = href.replace("wiki://", `/${semester}/${currentCourse}/`);
       }
       // 处理空格编码问题
       finalHref = finalHref.replace(/_/g, " ");
@@ -415,24 +437,26 @@ export default function DocPage() {
    */
   const renderMessageOrContent = () => {
     // 状态信息
-    if (fullPath !== loadedPath || isLoadingDoc) {
-      return <div className="text-gray-500">Loading the document...</div>;
-    }
     if (error) {
       return <div className="text-red-500">Error: {error}</div>;
     }
-    if (!doc || !doc.content) {
+    if (fullPath !== loadedPath || isLoadingDoc) {
+      return <div className="text-gray-500">Loading the document...</div>;
+    }
+    if (!doc || (!doc.content && !doc.url)) {
       return <div className="text-gray-500">No documents are available.</div>;
     }
 
     // 文档内容
     console.log("Rendering document:", doc);
-    if (!doc.title || doc.title.endsWith(".mdx") || doc.title.endsWith(".md")) {
+    if (doc.content && (!doc.title || doc.title.endsWith(".mdx") || doc.title.endsWith(".md"))) {
       // MDX 文件
       return (
         <div key={fullPath}>
           <article className="prose dark:prose-invert lg:prose-xl">
-            <h1 className="my-4 text-4xl font-bold text-[#660974] dark:text-[#dfaef8]">{doc.title?.replace(/\.mdx?$/, "")}</h1>
+            <h1 className="my-4 text-4xl font-bold text-[#660974] dark:text-[#dfaef8]">
+              {doc.title?.replace(/\.mdx?$/, "")}
+            </h1>
             <div className="mathjax-wrapper-isolation">
               <MathJaxComponent>
                 <MDXRemote {...doc.content} components={overrideComponents} />
@@ -441,34 +465,64 @@ export default function DocPage() {
           </article>
         </div>
       );
-    } else if (doc.title.endsWith(".pdf")) {
+    } else if (doc.title && doc.title.endsWith(".pdf")) {
       // PDF 文件
       if (!doc.url) {
-        return <div className="text-gray-500">No URL available for the PDF document.</div>;
+        return (
+          <div className="text-gray-500">
+            No URL available for the PDF document.
+          </div>
+        );
       }
       return (
         <div key={fullPath} className="my-8">
-          <iframe
-            src={doc.url}
-            title={doc.title}
-            width="100%"
-            height="800px"
-            className="border border-gray-300 dark:border-gray-600"
-          />
+          <article className="prose dark:prose-invert lg:prose-xl">
+            <h1 className="my-4 text-4xl font-bold text-[#660974] dark:text-[#dfaef8]">
+              {doc.title}
+            </h1>
+            <iframe
+              src={doc.url}
+              title={doc.title}
+              width="100%"
+              height="800px"
+              className="border border-gray-300 dark:border-gray-600"
+            />
+          </article>
         </div>
       );
-    } else if (doc.title.endsWith(".png") || doc.title.endsWith(".jpg") || doc.title.endsWith(".jpeg") || doc.title.endsWith(".gif") || doc.title.endsWith(".svg")) {
+    } else if (
+      doc.title && (
+      doc.title.endsWith(".png") ||
+      doc.title.endsWith(".jpg") ||
+      doc.title.endsWith(".jpeg") ||
+      doc.title.endsWith(".gif") ||
+      doc.title.endsWith(".svg")
+      )
+    ) {
       // 图片文件
       if (!doc.url) {
-        return <div className="text-gray-500">No URL available for the image document.</div>;
+        return (
+          <div className="text-gray-500">
+            No URL available for the image document.
+          </div>
+        );
       }
       return (
-        <div key={fullPath} className="my-8 text-center">
+        <div key={fullPath} className="my-8">
+          <article className="prose dark:prose-invert lg:prose-xl">
+          <h1 className="my-4 text-4xl font-bold text-[#660974] dark:text-[#dfaef8]">
+            {doc.title}
+          </h1>
           <Image
             src={doc.url}
             alt={doc.title}
-            className="mx-auto max-w-full rounded-md border border-gray-300 dark:border-gray-600"
+            width={1600}
+            height={900}
+            sizes="(min-width: 1024px) 896px, 100vw"
+            unoptimized
+            className="mx-auto max-w-full rounded-2xl border border-gray-300 dark:border-gray-600 bg-white/75"
           />
+          </article>
         </div>
       );
     } else {
@@ -484,7 +538,7 @@ export default function DocPage() {
             "top-32 h-[calc(100vh-128px)]"
           : "top-56 h-[calc(100vh-224px)]"
         }`}>
-        <div className="h-full w-72 overflow-y-auto p-6">
+        <div className="h-full w-72 overflow-y-auto p-6 scrollbar-thin">
           {/* 标题 */}
           <div className="mb-6 flex items-center justify-between">
             <h2 className="text-xl font-bold text-gray-700 dark:text-gray-200">
@@ -502,13 +556,14 @@ export default function DocPage() {
           <CourseDropdown
             courses={courses}
             currentCourse={currentCourse}
-            onSelect={(course) => router.push(`/${course}`)}
+            onSelect={(course) => router.push(`/${semester}/${course}`)}
           />
 
           {/* 目录列表 */}
           <RecursiveDirectoryList
+            semester={semester}
             items={courseStructure}
-            onSelect={(path) => router.push(`/${path}`)}
+            onSelect={(path) => router.push(`/${semester}/${path}`)}
             currentPath={fullPath}
           />
         </div>

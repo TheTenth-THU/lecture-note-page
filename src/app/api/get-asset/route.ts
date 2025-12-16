@@ -24,10 +24,14 @@ export async function GET(request: NextRequest) {
   const { env } = getCloudflareContext();
   const GITHUB_TOKEN = await env.GITHUB_NOTE_TOKEN.get();
 
-  const REPO_OWNER = "TheTenth-THU";
-  const REPO_NAME = "THUEE23-25Autumn";
-
   const { searchParams } = new URL(request.url);
+  const semester = searchParams.get("semester");
+  if (!semester) {
+    return NextResponse.json(
+      { error: "Semester path `semester` is required" },
+      { status: 400 },
+    );
+  }
   const page = searchParams.get("page");
   if (!page) {
     return NextResponse.json(
@@ -35,6 +39,9 @@ export async function GET(request: NextRequest) {
       { status: 400 },
     );
   }
+
+  const REPO_OWNER = "TheTenth-THU";
+  const REPO_NAME = `THUEE23-${semester}`;
 
   const fileUrl =
     page.startsWith("/") ?
