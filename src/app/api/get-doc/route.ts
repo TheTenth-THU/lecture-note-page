@@ -8,6 +8,7 @@ import remarkMath from "remark-math";
 import remarkObsidian from "remark-obsidian";
 import remarkWikiLink from "remark-wiki-link";
 import remarkObsidianCallout from "remark-obsidian-callout";
+import rehypeObsidianId from "@/lib/rehype-obsidian-id";
 
 import rehypeRaw from "rehype-raw";
 // import rehypeKatex from "rehype-katex";
@@ -177,11 +178,21 @@ export async function GET(request: NextRequest) {
 
     // 提取标题
     // 无 front matter 标题则使用 page 路径最后的文件名并略去扩展名
-    let title =
-      frontMatter.title ||
-      (contents as GitHubFileResponse).name.replace(/\.mdx?$/, "");
+    let title = frontMatter.title || (contents as GitHubFileResponse).name;
     if (Array.isArray(title)) {
       title = title.join(" ");
+    }
+
+    // 对非 markdown 文件，返回 get-asset 接口 url
+    if (!page.endsWith(".md") && !page.endsWith(".mdx")) {
+      return NextResponse.json(
+        {
+          type: "ASSET",
+          title,
+          url: `/api/get-asset?page=${encodeURIComponent(page)}`,
+        },
+        { status: 200 },
+      );
     }
 
     // 序列化 MDX 内容
@@ -194,7 +205,8 @@ export async function GET(request: NextRequest) {
             remarkWikiLink,
             {
               aliasDivider: "|",
-              hrefTemplate: (permalink: string) => `/${permalink}`,
+              pageResolver: (name: string) => [name],
+              hrefTemplate: (permalink: string) => `wiki://${permalink}`,
             },
           ],
           remarkMath,
@@ -205,6 +217,7 @@ export async function GET(request: NextRequest) {
         ],
         rehypePlugins: [
           rehypeRaw,
+          rehypeObsidianId,
           // rehypeKatex,
           rehypeMathToTex,
         ],

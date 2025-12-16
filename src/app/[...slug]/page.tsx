@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, memo } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 
 import { MDXComponents } from "mdx/types";
@@ -19,6 +19,7 @@ import { components } from "@/components/mdx-components";
 import "@/app/markdown.css";
 import InlineLink from "@/app/ui/inline-link";
 import MathJaxComponent from "@/components/mathjax-component";
+import Image from "next/image";
 
 import {
   FolderOpenIcon,
@@ -27,52 +28,6 @@ import {
   Bars3Icon,
   AcademicCapIcon,
 } from "@heroicons/react/24/outline";
-
-/**
- * Overrides the default MDX components with custom ones.
- * 覆盖默认的 MDX 组件以使用自定义组件。
- */
-const overrideComponents: MDXComponents = {
-  ...components,
-  a: ({ children, href, ...props }) => (
-    <InlineLink href={href} {...props}>
-      {children}
-    </InlineLink>
-  ),
-  strong: ({ children, ...props }) => (
-    <strong
-      className="font-semibold text-[#660974] dark:text-[#c70053]"
-      {...props}>
-      {children}
-    </strong>
-  ),
-};
-
-// 提取并记忆化文档显示组件
-// 防止父组件的状态变化触发文档内容的重渲染
-const MemoizedDocContent = memo(
-  ({
-    doc,
-    overrideComponents,
-  }: {
-    doc: DocResponse;
-    overrideComponents: MDXComponents;
-  }) => {
-    if (!doc.content) return null;
-    return (
-      <article className="prose dark:prose-invert lg:prose-xl">
-        <h1 className="my-4 text-4xl font-bold">{doc.title}</h1>
-        <div className="mathjax-wrapper-isolation">
-          <MathJaxComponent>
-            <MDXRemote {...doc.content} components={overrideComponents} />
-          </MathJaxComponent>
-        </div>
-      </article>
-    );
-  },
-  // 自定义比较函数：只有当 doc 对象本身发生变化时才重新渲染
-  (prev, next) => prev.doc === next.doc
-);
 
 /**
  * Types for GitHub API responses
@@ -92,6 +47,7 @@ interface DocResponse {
   // represents a markdown document
   title?: string;
   content?: MDXRemoteSerializeResult;
+  url?: string;
 }
 
 /**
@@ -108,19 +64,13 @@ function CourseDropdown({
   onSelect: (course: string) => void;
 }) {
   return (
-    <div className="flex flex-row space-x-2 mb-4 items-center text-[16px]">
+    <div className="mb-4 flex flex-row items-center space-x-2 text-[16px]">
       <AcademicCapIcon className="h-6 w-6 text-[#660974] dark:text-purple-400" />
       <select
         value={currentCourse || ""}
         onChange={(e) => onSelect(e.target.value)}
-        className="
-          w-full px-3 py-2 rounded-md border
-          border-gray-300 bg-white text-gray-700 shadow-sm 
-          dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 
-          focus:ring-1 focus:outline-none 
-          focus:border-[#660974] focus:ring-[#660974] 
-          dark:focus:border-purple-400 dark:focus:ring-purple-400">
-        <option value="" disabled className="italic text-sm">
+        className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-700 shadow-sm focus:border-[#660974] focus:ring-1 focus:ring-[#660974] focus:outline-none dark:border-[#400649] dark:bg-[#400649] dark:text-gray-200 dark:focus:border-purple-400 dark:focus:ring-purple-400">
+        <option value="" disabled className="text-sm italic">
           Select a course
         </option>
         {courses.map((course) => (
@@ -130,7 +80,7 @@ function CourseDropdown({
         ))}
       </select>
     </div>
-  )
+  );
 }
 
 /**
@@ -141,30 +91,42 @@ function RecursiveDirectoryList({
   items,
   onSelect,
   currentPath,
+  leftMargin = 0,
 }: {
   items: GitHubDirectoryDetailTerm[];
   onSelect: (path: string) => void;
   currentPath?: string;
+  leftMargin?: number;
 }) {
   return (
-    <ul className="space-y-0.5 border-l border-gray-200 dark:border-gray-700">
+    <ul
+      className="space-y-0.5 border-l border-gray-200 dark:border-gray-700"
+      style={{ marginLeft: leftMargin }}>
       {items.map((item) => (
         // 每个文件或目录项
         <li key={item.path}>
           {
             item.type === "file" ?
               // 文件项
-              <button
-                className={`
-                  group flex w-full items-center rounded-md px-2 py-1.5 text-left text-sm transition-colors ${
-                  currentPath === item.path ?
-                    "bg-purple-100 font-medium text-[#660974] dark:bg-[#41044a] dark:text-purple-200"
-                  : "text-gray-600 hover:bg-purple-50 hover:text-[#660974] dark:text-gray-300 hover:dark:bg-[#41044a] hover:dark:text-purple-200"
-                } `}
-                onClick={() => onSelect(item.path)}>
-                <DocumentTextIcon className="mr-2 h-4 w-4 shrink-0 text-gray-400 group-hover:text-purple-200" />
-                <span className="truncate">{item.name}</span>
-              </button>
+              item.name.startsWith(".") ?
+                null
+              : <button
+                  className={`group flex w-full items-center rounded-md px-2 py-1.5 text-left text-sm transition-colors ${
+                    currentPath === item.path ?
+                      "bg-purple-100 font-medium text-[#660974] dark:bg-[#41044a] dark:text-purple-200"
+                    : "text-gray-600 hover:bg-purple-50 hover:text-[#660974] dark:text-gray-300 hover:dark:bg-[#41044a] hover:dark:text-purple-200"
+                  } `}
+                  onClick={() => onSelect(item.path)}>
+                  <DocumentTextIcon className="mr-2 h-4 w-4 shrink-0 text-gray-400 group-hover:text-purple-200" />
+                  <span className="truncate">
+                    {item.name.endsWith(".mdx") ?
+                      item.name.slice(0, -4)
+                    : item.name.endsWith(".md") ?
+                      item.name.slice(0, -3)
+                    : item.name}
+                  </span>
+                </button>
+
               // 目录项
             : <div className="select-none">
                 <div className="flex items-center px-2 py-1.5 text-sm font-medium text-gray-900 dark:text-gray-100">
@@ -176,6 +138,7 @@ function RecursiveDirectoryList({
                     items={item.children}
                     onSelect={onSelect}
                     currentPath={currentPath}
+                    leftMargin={25}
                   />
                 )}
               </div>
@@ -270,7 +233,9 @@ export default function DocPage() {
         // 获取根目录内容
         const res = await fetch(`/api/get-doc?page=/`);
         if (!res.ok) {
-          throw new Error(`Failed to fetch courses due to ${res.statusText}: ${await res.text()}`);
+          throw new Error(
+            `Failed to fetch courses due to ${res.statusText}: ${await res.text()}`,
+          );
         }
 
         const data: DocResponse = await res.json();
@@ -279,7 +244,8 @@ export default function DocPage() {
         }
 
         // 过滤出跟目录下的每个目录作为课程列表
-        const courseList = data.details?.filter((item) => item.type === "dir") || [];
+        const courseList =
+          data.details?.filter((item) => item.type === "dir") || [];
         setCourses(courseList);
       } catch (e) {
         console.error("Failed to fetch courses", e);
@@ -330,7 +296,9 @@ export default function DocPage() {
       // 使用 recursive 参数调用 get-doc API 获取完整目录结构
       const res = await fetch(`/api/get-doc?page=${curDir}&recursive=true`);
       if (!res.ok) {
-        console.error(`Failed to fetch course structure at "${curDir}": ${res.statusText}`);
+        console.error(
+          `Failed to fetch course structure at "${curDir}": ${res.statusText}`,
+        );
         return;
       }
       const data: DocResponse = await res.json();
@@ -362,14 +330,17 @@ export default function DocPage() {
         }
         const data: DocResponse = await res.json();
 
-        if (data.type === "DIR") { // 目录
+        if (data.type === "DIR") {
+          // 目录
           // 不需要更新 courseStructure，上面已经加载全量结构
           // 只需要处理路由跳转，防止用户停留在空白的文件夹页面
           if (data.details && data.details.length > 0) {
             // 查找 index.md 或 README.md 文件
-            const indexFile = data.details.find((d) =>
-              d.type === "file" &&
-              (d.name.toLowerCase() === "index.md" || d.name.toLowerCase() === "readme.md")
+            const indexFile = data.details.find(
+              (d) =>
+                d.type === "file" &&
+                (d.name.toLowerCase() === "index.md" ||
+                  d.name.toLowerCase() === "readme.md"),
             );
             if (indexFile) {
               // 替换当前 URL，不推入历史记录以免回退死循环
@@ -391,11 +362,14 @@ export default function DocPage() {
               router.replace(`/${firstDir.path}`);
             }
           }
-        } else if (data.type === "FILE") {  // 是文档
+        } else if (data.type === "FILE") {
+          // 是文档
           setDoc(data);
           setLoadedPath(fullPath);
         } else {
-          throw new Error(`Failed to fetch due to ${res.statusText}: Unknown document type`);
+          throw new Error(
+            `Failed to fetch due to ${res.statusText}: Unknown document type`,
+          );
         }
       } catch (e: any) {
         setError(e.message || "Unknown error");
@@ -409,10 +383,38 @@ export default function DocPage() {
   }, [fullPath, router]);
 
   /**
+   * Overrides the default MDX components with custom ones.
+   * 覆盖默认的 MDX 组件以使用自定义组件。
+   */
+  const overrideComponents: MDXComponents = {
+    ...components,
+    a: ({ children, href, ...props }) => {
+      let finalHref = href || "";
+      // 处理 wiki:// 链接
+      if (href && href.startsWith("wiki://#")) {
+        finalHref = href.replace("wiki://#", `/${fullPath}#`);
+        if (children && typeof children === "string") {
+          children = children.replace("#", "");
+        }
+      } else if (href && href.startsWith("wiki://")) {
+        finalHref = href.replace("wiki://", `/${currentCourse}/`);
+      }
+      // 处理空格编码问题
+      finalHref = finalHref.replace(/_/g, " ");
+      return (
+        <InlineLink href={finalHref} {...props}>
+          {children}
+        </InlineLink>
+      );
+    },
+  };
+
+  /**
    * Render loading, error, or document content
    * 渲染加载中、错误信息或文档内容
    */
   const renderMessageOrContent = () => {
+    // 状态信息
     if (fullPath !== loadedPath || isLoadingDoc) {
       return <div className="text-gray-500">Loading the document...</div>;
     }
@@ -422,11 +424,56 @@ export default function DocPage() {
     if (!doc || !doc.content) {
       return <div className="text-gray-500">No documents are available.</div>;
     }
-    return (
-      <div key={fullPath}>
-        <MemoizedDocContent doc={doc} overrideComponents={overrideComponents} />
-      </div>
-    );
+
+    // 文档内容
+    console.log("Rendering document:", doc);
+    if (!doc.title || doc.title.endsWith(".mdx") || doc.title.endsWith(".md")) {
+      // MDX 文件
+      return (
+        <div key={fullPath}>
+          <article className="prose dark:prose-invert lg:prose-xl">
+            <h1 className="my-4 text-4xl font-bold text-[#660974] dark:text-[#dfaef8]">{doc.title?.replace(/\.mdx?$/, "")}</h1>
+            <div className="mathjax-wrapper-isolation">
+              <MathJaxComponent>
+                <MDXRemote {...doc.content} components={overrideComponents} />
+              </MathJaxComponent>
+            </div>
+          </article>
+        </div>
+      );
+    } else if (doc.title.endsWith(".pdf")) {
+      // PDF 文件
+      if (!doc.url) {
+        return <div className="text-gray-500">No URL available for the PDF document.</div>;
+      }
+      return (
+        <div key={fullPath} className="my-8">
+          <iframe
+            src={doc.url}
+            title={doc.title}
+            width="100%"
+            height="800px"
+            className="border border-gray-300 dark:border-gray-600"
+          />
+        </div>
+      );
+    } else if (doc.title.endsWith(".png") || doc.title.endsWith(".jpg") || doc.title.endsWith(".jpeg") || doc.title.endsWith(".gif") || doc.title.endsWith(".svg")) {
+      // 图片文件
+      if (!doc.url) {
+        return <div className="text-gray-500">No URL available for the image document.</div>;
+      }
+      return (
+        <div key={fullPath} className="my-8 text-center">
+          <Image
+            src={doc.url}
+            alt={doc.title}
+            className="mx-auto max-w-full rounded-md border border-gray-300 dark:border-gray-600"
+          />
+        </div>
+      );
+    } else {
+      return <div className="text-gray-500">Unsupported document type.</div>;
+    }
   };
 
   return (

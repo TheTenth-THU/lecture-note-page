@@ -9,7 +9,7 @@ export default function InlineLink({
   ...props
 }: ComponentProps<"a">) {
   const linkContent = (
-    <span className="text-[#660974] hover:underline hover:font-bold dark:text-[#ef8bff]">
+    <span className="text-[#660974] hover:underline hover:font-bold dark:text-[#dfaef8]">
       {children}
     </span>
   );
@@ -21,7 +21,7 @@ export default function InlineLink({
         href={href}
         {...props}>
         {linkContent}
-        <LinkIcon className="inline-block mx-1 h-[1em] w-[1em] align-[-0.125em]" />
+        <LinkIcon className="inline-block mx-1 h-[1em] w-[1em] align-[-0.125em] text-foreground" />
       </Link>
     );
   } else if (href && href.startsWith("mailto:")) {
@@ -31,7 +31,7 @@ export default function InlineLink({
         href={href}
         {...props}>
         {linkContent}
-        <EnvelopeOpenIcon className="inline-block mx-1 h-[1em] w-[1em] align-[-0.125em]" />
+        <EnvelopeOpenIcon className="inline-block mx-1 h-[1em] w-[1em] align-[-0.125em] text-foreground" />
       </a>
     );
   } else {
@@ -43,7 +43,7 @@ export default function InlineLink({
         rel="noopener noreferrer"
         {...props}>
         {linkContent}
-        <ArrowTopRightOnSquareIcon className="inline-block mx-1 h-[1em] w-[1em] align-[-0.125em]" />
+        <ArrowTopRightOnSquareIcon className="inline-block mx-1 h-[1em] w-[1em] align-[-0.125em] text-foreground" />
       </a>
     );
   }
