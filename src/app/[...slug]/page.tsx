@@ -157,11 +157,6 @@ function RecursiveDirectoryList({
   );
 }
 
-/**
- * Fetches and processes the markdown content for a given slug.
- * 处理给定 slug 的 markdown 内容的获取和处理。
- * @returns An object containing the serialized source and front matter.
- */
 export default function DocPage() {
   const params = useParams();
   const router = useRouter();
