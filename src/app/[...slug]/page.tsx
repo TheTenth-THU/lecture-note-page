@@ -17,6 +17,7 @@ import { components } from "@/components/mdx-components";
 // import rehypeMathToTex from "@/lib/rehype-math-to-tex";
 
 import "@/app/markdown.css";
+import "@/app/math.css";
 import InlineLink from "@/app/ui/inline-link";
 import MathJaxComponent from "@/components/mathjax-component";
 import Image from "next/image";
@@ -106,7 +107,8 @@ function RecursiveDirectoryList({
       style={{ marginLeft: leftMargin }}>
       {items.map((item) => (
         // 每个文件或目录项
-        <li key={item.path === "<scene>" ? item.path + Math.random() : item.path}>
+        <li
+          key={item.path === "<scene>" ? item.path + Math.random() : item.path}>
           {
             item.type === "file" ?
               // 文件项
@@ -444,7 +446,10 @@ export default function DocPage() {
 
     // 文档内容
     console.log("Rendering document:", doc);
-    if (doc.content && (!doc.title || doc.title.endsWith(".mdx") || doc.title.endsWith(".md"))) {
+    if (
+      doc.content &&
+      (!doc.title || doc.title.endsWith(".mdx") || doc.title.endsWith(".md"))
+    ) {
       // MDX 文件
       return (
         <div key={fullPath}>
@@ -486,13 +491,12 @@ export default function DocPage() {
         </div>
       );
     } else if (
-      doc.title && (
-      doc.title.endsWith(".png") ||
-      doc.title.endsWith(".jpg") ||
-      doc.title.endsWith(".jpeg") ||
-      doc.title.endsWith(".gif") ||
-      doc.title.endsWith(".svg")
-      )
+      doc.title &&
+      (doc.title.endsWith(".png") ||
+        doc.title.endsWith(".jpg") ||
+        doc.title.endsWith(".jpeg") ||
+        doc.title.endsWith(".gif") ||
+        doc.title.endsWith(".svg"))
     ) {
       // 图片文件
       if (!doc.url) {
@@ -505,18 +509,18 @@ export default function DocPage() {
       return (
         <div key={fullPath} className="my-8">
           <article className="prose dark:prose-invert lg:prose-xl">
-          <h1 className="my-4 text-4xl font-bold text-[#660974] dark:text-[#dfaef8]">
-            {doc.title}
-          </h1>
-          <Image
-            src={doc.url}
-            alt={doc.title}
-            width={1600}
-            height={900}
-            sizes="(min-width: 1024px) 896px, 100vw"
-            unoptimized
-            className="mx-auto max-w-full rounded-2xl border border-gray-300 dark:border-gray-600 bg-white/75"
-          />
+            <h1 className="my-4 text-4xl font-bold text-[#660974] dark:text-[#dfaef8]">
+              {doc.title}
+            </h1>
+            <Image
+              src={doc.url}
+              alt={doc.title}
+              width={1600}
+              height={900}
+              sizes="(min-width: 1024px) 896px, 100vw"
+              unoptimized
+              className="mx-auto max-w-full rounded-2xl border border-gray-300 bg-white/75 dark:border-gray-600"
+            />
           </article>
         </div>
       );
@@ -533,7 +537,7 @@ export default function DocPage() {
             "top-32 h-[calc(100vh-128px)]"
           : "top-56 h-[calc(100vh-224px)]"
         }`}>
-        <div className="h-full w-72 overflow-y-auto p-6 scrollbar-thin">
+        <div className="scrollbar-thin h-full w-72 overflow-y-auto p-6">
           {/* 标题 */}
           <div className="mb-6 flex items-center justify-between">
             <h2 className="text-xl font-bold text-gray-700 dark:text-gray-200">

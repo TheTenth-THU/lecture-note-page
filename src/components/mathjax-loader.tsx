@@ -1,11 +1,13 @@
-'use client';
+"use client";
 
-import Script from 'next/script';
-import { useState } from 'react';
+import Script from "next/script";
+import { useState } from "react";
 
 export default function MathJaxLoader() {
   // 默认尝试 CDN，如果失败则切换到本地
-  const [scriptSrc, setScriptSrc] = useState('https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js');
+  const [scriptSrc, setScriptSrc] = useState(
+    "https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js",
+  );
 
   const texMacros: Record<string, string | [string, number]> = {
     // 微积分
@@ -54,26 +56,29 @@ export default function MathJaxLoader() {
           __html: `
             window.MathJax = {
               tex: {
+                packages: {'[+]': ['boldsymbol']},
                 macros: ${JSON.stringify(texMacros)}
               },
               output: {
                 font: 'mathjax-asana'
               },
               loader: { 
-                load: ['ui/lazy'] 
+                load: ['ui/lazy', '[tex]/boldsymbol'] 
               }
             };
           `,
         }}
       />
-      
+
       {/* Load MathJax script with fallback */}
       <Script
         src={scriptSrc}
         strategy="afterInteractive"
         onError={() => {
-          console.warn(`MathJax CDN load failed (${scriptSrc}). Switching to local backup.`);
-          setScriptSrc('/scripts/mathjax.js');
+          console.warn(
+            `MathJax CDN load failed (${scriptSrc}). Switching to local backup.`,
+          );
+          setScriptSrc("/scripts/mathjax.js");
         }}
       />
     </>
