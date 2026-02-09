@@ -339,8 +339,14 @@ export async function GET(request: NextRequest) {
     // 序列化 MDX 内容
     console.log("Serializing MDX content for page:", page);
     // 将 content 中的 `<br>` 替换为闭合的 `<br />`，避免 MDX 解析问题
-    const contentWithNewlines = content.replace(/<br\s*\/?>/g, "<br />");
-    const mdxSource = await serialize(contentWithNewlines, {
+    let processedContent = content.replace(/<br\s*\/?>/g, "<br />");
+    // 处理 Obsidian 图片链接 ![[path/to/image.png|alt text]]
+    // 替换为标准的 markdown 图片链接 ![alt text](wiki://path/to/image.png)
+    processedContent = processedContent.replace(
+      /!\[\[(.*?)(?:\|(.*?))?\]\]/g,
+      (match, path, caption) => `![${caption || ""}](wiki://${path})`,
+    );
+    const mdxSource = await serialize(processedContent, {
       mdxOptions: {
         remarkPlugins: [
           remarkGfm,

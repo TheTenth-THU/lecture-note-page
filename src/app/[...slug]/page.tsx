@@ -426,6 +426,26 @@ export default function DocPage() {
         </InlineLink>
       );
     },
+    img: ({ alt, src, ...props }) => {
+      let finalSrc = src || "";
+      // 处理 wiki:// 链接
+      if (src && src.startsWith("wiki://")) {
+        const filename = src.replace("wiki://", "");
+        finalSrc = `/api/get-asset?semester=${encodeURIComponent(semester)}&page=${encodeURIComponent(currentCourse + "/res/" + filename)}`;
+      }
+      return (
+        <Image
+          src={finalSrc}
+          alt={alt || ""}
+          width={1600}
+          height={900}
+          sizes="(min-width: 1024px) 896px, 100vw"
+          unoptimized
+          {...props}
+          className="mx-auto max-w-full rounded-2xl border border-gray-300 bg-white/75 dark:border-gray-600"
+        />
+      );
+    },
   };
 
   /**
