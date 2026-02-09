@@ -1,4 +1,6 @@
 import type { Metadata } from 'next';
+import { ThemeProvider } from '@/contexts/theme-context';
+
 import Script from 'next/script';
 import clsx from 'clsx';
 
@@ -21,19 +23,21 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${stoneSerif.variable} ${wenHeiSans.variable} ${runYuanSerif.variable}`}>
       <body className="text-lg font-serif">
-        {/* Header is now a client component to handle scroll effects */}
-        <Header />
+        <ThemeProvider>
+          {/* Header is now a client component to handle scroll effects */}
+          <Header />
 
-        {/* Page content */}
-        <main className="mx-0 pt-64 pb-16">
-          {children}
-        </main>
+          {/* Page content */}
+          <main className="mx-0 pt-64 pb-16">
+            {children}
+          </main>
 
-        {/* Footer with contact info */}
-        <Footer />
+          {/* Footer with contact info */}
+          <Footer />
 
-        {/* MathJax with custom macros */}
-        <MathJaxLoader />
+          {/* MathJax with custom macros */}
+          <MathJaxLoader />
+        </ThemeProvider>
       </body>
     </html>
   );
