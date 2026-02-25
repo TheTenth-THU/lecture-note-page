@@ -32,6 +32,7 @@ export function ThemeSwitcher() {
         <div className="flex gap-2">
           {["serif", "sans"].map((f) => (
             <Button
+              key={f}
               onClick={() => setFont(f as any)}
               isActive={font === f}
             >
