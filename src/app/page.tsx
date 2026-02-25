@@ -25,7 +25,7 @@ interface DocResponse {
 
 export default function DocPage() {
   const semesters = useMemo(
-    () => ["23Autumn", "24Spring", "24Autumn", "25Spring", "25Autumn"],
+    () => ["23Autumn", "24Spring", "24Autumn", "25Spring", "25Autumn", "26Spring"],
     [],
   );
 

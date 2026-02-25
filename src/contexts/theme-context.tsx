@@ -20,7 +20,7 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [mode, setMode] = useState<ThemeMode>("system");
   const [font, setFont] = useState<FontFamily>("serif");
-  const [color, setColor] = useState<ThemeColor>("blue");
+  const [color, setColor] = useState<ThemeColor>("tsinghua");
 
   // 初始化加载
   useEffect(() => {

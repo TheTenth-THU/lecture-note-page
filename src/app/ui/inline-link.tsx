@@ -9,7 +9,7 @@ export default function InlineLink({
   ...props
 }: ComponentProps<"a">) {
   const linkContent = (
-    <span className="text-[#660974] hover:underline hover:font-bold dark:text-[#dfaef8]">
+    <span className="text-secondary-f25 hover:underline hover:font-bold">
       {children}
     </span>
   );
@@ -48,4 +48,3 @@ export default function InlineLink({
     );
   }
 }
-  

@@ -48,7 +48,7 @@ export default function NavLinks({ isShrunk }: { isShrunk: boolean }) {
               },
               /* --- State styles --- */
               "transition-all duration-200 ease-in-out",
-              "hover:bg-purple-200 hover:text-[#660974] hover:dark:bg-[#660974] hover:dark:text-purple-200",
+              "hover:bg-primary-b50 hover:text-primary-f10",
               "md:flex-none md:justify-start md:px-3",
             )}>
             <LinkIcon className="w-6" />

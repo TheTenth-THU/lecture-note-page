@@ -1,10 +1,11 @@
 import clsx from "clsx";
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  children: React.ReactNode;
+  children?: React.ReactNode;
+  isActive?: boolean;
 }
 
-export function Button({ children, className, ...rest }: ButtonProps) {
+export function Button({ className, children, isActive, ...rest }: ButtonProps) {
   return (
     <button
       {...rest}
@@ -13,19 +14,23 @@ export function Button({ children, className, ...rest }: ButtonProps) {
         // layout
         "flex items-center",
         // size, shape, background
-        "h-10 rounded-lg bg-purple-500 px-4",
+        "min-h-9 rounded-lg px-3 border",
+        {
+          "bg-primary border-foreground": isActive,
+          "bg-primary-b50 border-primary-b50": !isActive,
+        },
         // font
-        "text-sm font-medium text-white",
+        "text-sm font-medium text-foreground",
         /* --- Transition --- */
         // transition switches
         "transition-colors",
         /* --- State styles --- */
         // hover
-        "hover:bg-purple-400",
+        "hover:bg-primary-f75 hover:border-primary-f75",
         // focus
-        "focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-purple-500",
+        "focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-primary-f50",
         // active
-        "active:bg-purple-600",
+        "active:bg-primary-f75",
         // disabled
         "disabled:cursor-not-allowed disabled:opacity-50",
         // aria-disabled

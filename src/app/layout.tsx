@@ -1,10 +1,11 @@
 import type { Metadata } from 'next';
-import { ThemeProvider } from '@/contexts/theme-context';
-
 import Script from 'next/script';
 import clsx from 'clsx';
 
 import './globals.css';
+import { ThemeProvider } from '@/contexts/theme-context';
+import { ThemeSwitcher } from '@/app/ui/theme-switcher';
+
 import { stoneSerif, wenHeiSans, runYuanSerif } from '@/app/ui/fonts';
 import { Header, Footer } from '@/app/ui/nav-bar';
 import MathJaxLoader from '@/components/mathjax-loader';

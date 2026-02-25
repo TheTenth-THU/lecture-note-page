@@ -1,63 +1,66 @@
 "use client";
 
 import { useTheme } from "@/contexts/theme-context";
+import clsx from "clsx";
+import { Button } from "./button";
+
 
 export function ThemeSwitcher() {
   const { mode, setMode, font, setFont, color, setColor } = useTheme();
 
   return (
-    <div className="p-4 border rounded-lg bg-white dark:bg-gray-800 shadow-sm space-y-4">
+    <div className="rounded-lg bg-primary-b25 space-y-4">
       {/* 模式切换 */}
-      <div>
-        <h3 className="text-sm font-semibold mb-2">外观</h3>
+      <div className="flex justify-start items-baseline gap-4">
+        <p className="text-sm font-semibold mb-2">Appearance</p>
         <div className="flex gap-2">
           {["light", "dark", "system"].map((m) => (
-            <button
+            <Button
               key={m}
               onClick={() => setMode(m as any)}
-              className={`px-3 py-1 rounded text-sm ${mode === m ? "bg-primary text-primary-foreground" : "bg-gray-100 dark:bg-gray-700"
-                }`}
+              isActive={mode === m}
             >
-              {m === "light" ? "浅色" : m === "dark" ? "深色" : "跟随系统"}
-            </button>
+              {m.charAt(0).toUpperCase() + m.slice(1)}
+            </Button>
           ))}
         </div>
       </div>
 
       {/* 字体切换 */}
-      <div>
-        <h3 className="text-sm font-semibold mb-2">字体</h3>
+      <div className="flex justify-start items-baseline gap-4">
+        <p className="text-sm font-semibold mb-2">Font</p>
         <div className="flex gap-2">
-          <button
-            onClick={() => setFont("serif")}
-            className={`px-3 py-1 rounded text-sm font-serif ${font === "serif" ? "bg-primary text-primary-foreground" : "bg-gray-100 dark:bg-gray-700"
-              }`}
-          >
-            衬线体
-          </button>
-          <button
-            onClick={() => setFont("sans")}
-            className={`px-3 py-1 rounded text-sm font-sans ${font === "sans" ? "bg-primary text-primary-foreground" : "bg-gray-100 dark:bg-gray-700"
-              }`}
-          >
-            无衬线
-          </button>
+          {["serif", "sans"].map((f) => (
+            <Button
+              onClick={() => setFont(f as any)}
+              isActive={font === f}
+            >
+              {f.charAt(0).toUpperCase() + f.slice(1)}
+            </Button>
+          ))}
         </div>
       </div>
 
       {/* 颜色切换 */}
-      <div>
-        <h3 className="text-sm font-semibold mb-2">主题色</h3>
+      <div className="flex justify-start items-center gap-4">
+        <p className="text-sm font-semibold mb-2">Theme</p>
         <div className="flex gap-2">
-          {["blue", "green", "purple"].map((c) => (
-            <button
+          {["tsinghua", "blue-purple",].map((c) => (
+            <Button
               key={c}
               onClick={() => setColor(c as any)}
-              className={`w-8 h-8 rounded-full border-2 ${color === c ? "border-gray-900 dark:border-white" : "border-transparent"
-                }`}
-              style={{ backgroundColor: c === "blue" ? "#3b82f6" : c === "green" ? "#22c55e" : "#a855f7" }}
-              aria-label={`选择${c}色`}
-            />
+              isActive={color === c}
+              className={clsx("bg-linear-to-br w-9 hover:border-2 hover:rounded-full",
+                {
+                  "from-[#660974] to-[#C83272]": c === "tsinghua" && mode !== "dark",
+                  "from-[#4f075a] to-[#a8054c]": c === "tsinghua" && mode === "dark",
+                  "from-[#1e40af] to-[#4d2ebc]": c === "blue-purple" && mode !== "dark",
+                  "from-[#2a4dc0] to-[#5733d9]": c === "blue-purple" && mode === "dark",
+                }
+              )}
+              aria-label={`选择${c}色`}>
+              <span></span>
+            </Button>
           ))}
         </div>
       </div>
