@@ -348,6 +348,7 @@ export async function GET(request: NextRequest) {
     );
     const mdxSource = await serialize(processedContent, {
       mdxOptions: {
+        format: "md",
         remarkPlugins: [
           remarkGfm,
           [

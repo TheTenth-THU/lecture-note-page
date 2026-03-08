@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import {
   HomeIcon,
@@ -12,12 +12,12 @@ import { usePathname } from "next/navigation";
 
 const links = [
   {
-    name: "Home Page",
+    name: "主页",
     href: "www.zhenxing.space",
     icon: HomeIcon,
   },
   {
-    name: "Courses",
+    name: "笔记",
     href: "/",
     icon: DocumentTextIcon,
   },
@@ -37,14 +37,16 @@ export default function NavLinks({ isShrunk }: { isShrunk: boolean }) {
         return (
           <Link
             key={link.name}
-            href={link.href.startsWith("/") ? link.href : `https://${link.href}`}
+            href={
+              link.href.startsWith("/") ? link.href : `https://${link.href}`
+            }
             className={clsx(
               /* --- Base styles --- */
               "flex grow items-center justify-center",
-              "mr-2 h-10 gap-2 rounded-md p-2 bg-[#1e293944] border border-gray-400",
+              "mr-2 h-10 gap-2 rounded-md border border-gray-400 bg-[#1e293944] p-2",
               "text-sm font-medium text-gray-400",
               {
-                "bg-[#1e293988] text-white": pathname === link.href,
+                "bg-[#1e293988] text-white": pathname.startsWith(link.href),
               },
               /* --- State styles --- */
               "transition-all duration-200 ease-in-out",
@@ -52,9 +54,7 @@ export default function NavLinks({ isShrunk }: { isShrunk: boolean }) {
               "md:flex-none md:justify-start md:px-3",
             )}>
             <LinkIcon className="w-6" />
-            <p className={clsx(
-              isShrunk ? "hidden" : "block"
-            )}>{link.name}</p>
+            <p className={clsx(isShrunk ? "hidden" : "block")}>{link.name}</p>
           </Link>
         );
       })}

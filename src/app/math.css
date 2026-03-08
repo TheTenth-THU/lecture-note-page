@@ -1,15 +1,8 @@
-article {
-    --color-accent: #A7064D; /* text-[#A7064D] dark:text-[#ffb3d4] */
-    @media (prefers-color-scheme: dark) {
-        --color-accent: #ffb3d4;
-    }
-}
-
 mjx-mstyle[style="border: 1.5px solid;"] {
-    background-color: color-mix(in srgb, var(--color-accent) 20%, rgba(255, 255, 255, 0) 80%);
+    background-color: var(--color-secondary-b25);
     border-radius: 5px;
-    border: 1.5px solid var(--color-accent) !important;
-    color: var(--color-accent);
+    border: 1.5px solid var(--color-secondary-f50) !important;
+    color: var(--color-secondary-f50);
 }
 
 mjx-mstyle[style="border: 1.5px solid;"] > mjx-mpadded > mjx-block {

@@ -25,7 +25,14 @@ interface DocResponse {
 
 export default function DocPage() {
   const semesters = useMemo(
-    () => ["23Autumn", "24Spring", "24Autumn", "25Spring", "25Autumn", "26Spring"],
+    () => [
+      "23Autumn",
+      "24Spring",
+      "24Autumn",
+      "25Spring",
+      "25Autumn",
+      "26Spring",
+    ],
     [],
   );
 
@@ -96,18 +103,16 @@ export default function DocPage() {
   }, [semesters]);
 
   return (
-    <div className="mx-auto mt-10 min-h-screen max-w-5xl px-8 md:px-20">
+    <div className="mx-auto mt-10 max-w-7xl px-10 md:px-20">
       {error ?
-        <div className="my-4 rounded-lg border border-red-200 bg-red-50 p-4 text-red-700 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-200">
+        <div className="my-4 rounded-lg border border-red-200 bg-red-50 p-4 text-red-700">
           <p className="font-semibold">Error Message</p>
           {error}
         </div>
       : null}
 
       {isLoading ?
-        <div className="text-gray-500 dark:text-gray-400">
-          正在加载课程列表…
-        </div>
+        <div className="text-mixed-50">正在加载课程列表……</div>
       : <section className="grid grid-cols-1 gap-6 md:grid-cols-3">
           {[...semesters].reverse().map((semester) => {
             const courses = coursesBySemester[semester];
@@ -115,12 +120,10 @@ export default function DocPage() {
             return (
               <div
                 key={semester}
-                className="rounded-xl bg-linear-150 from-[#41044a44] from-60% to-[#a8054c22]">
-                <div className="mb-3 flex items-baseline justify-between rounded-t-xl bg-[#f3e8ff] px-5 pt-4 pb-3 dark:bg-[#41044a]">
-                  <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
-                    {semester}
-                  </h2>
-                  <span className="text-sm text-gray-500 dark:text-gray-400">
+                className="from-primary-b50/20 to-secondary-b50/20 rounded-xl bg-linear-150 from-60%">
+                <div className="bg-primary-b50 mb-3 flex items-baseline justify-between rounded-t-xl px-5 pt-4 pb-3">
+                  <h2 className="text-xl font-semibold">{semester}</h2>
+                  <span className="text-mixed-75 text-sm">
                     {courses.length} Lecture{courses.length !== 1 ? "s" : ""}
                   </span>
                 </div>
@@ -130,7 +133,7 @@ export default function DocPage() {
                     <li key={`${semester}/${course.name}`}>
                       <Link
                         href={`/${encodeURIComponent(semester)}/${encodeURIComponent(course.name)}`}
-                        className="py-0.1 block truncate rounded-md px-2 text-[16px] text-[#41044a] hover:bg-purple-50 dark:text-white dark:hover:bg-[#41044a]">
+                        className="py-0.1 hover:bg-primary-b50 block truncate rounded-md px-2 text-[16px]">
                         <ForwardIcon className="mr-2 inline h-4 w-4 align-middle" />
                         {course.name}
                       </Link>

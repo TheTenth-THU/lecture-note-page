@@ -273,39 +273,6 @@ export default function DocPage() {
       curSemester: string,
       curDir: string,
     ) => {
-      // // 定义递归获取目录结构
-      // const recursiveFetchCourseStructure = async (dir: string): Promise<GitHubDirectoryDetailTerm[]> => {
-      //   // 获取目录 `curDir` 下的内容
-      //   const res = await fetch(`/api/get-doc?page=${curDir}`);
-      //   if (!res.ok) {
-      //     throw new Error(`Failed to fetch course structure at "${curDir}": ${res.statusText}`);
-      //   }
-
-      //   const data: DocResponse = await res.json();
-      //   if (data.type !== "DIR") {
-      //     throw new Error("Expected a directory response for course structure");
-      //   }
-
-      //   const detailedItems: GitHubDirectoryDetailTerm[] = [];
-      //   for (const item of data.details || []) {
-      //     if (item.type === "dir") {
-      //       // 递归获取子目录内容
-      //       const children = await recursiveFetchCourseStructure(item.path);
-      //       detailedItems.push({ ...item, children });
-      //     } else {
-      //       detailedItems.push(item);
-      //     }
-      //   }
-      //   return detailedItems;
-      // }
-
-      // try {
-      //   const detailedItems = await recursiveFetchCourseStructure(curDir);
-      //   setCourseStructure(detailedItems);
-      // } catch (e) {
-      //   console.error(`Failed to fetch course structure at "${curDir}":`, e);
-      // }
-
       // 使用 recursive 参数调用 get-doc API 获取完整目录结构
       const res = await fetch(
         `/api/get-doc?semester=${curSemester}&page=${curDir}&recursive=true`,
@@ -339,6 +306,12 @@ export default function DocPage() {
       setError(null);
 
       try {
+        console.debug(`Fetching document for path: ${fullPath}`, {
+          url: `/api/get-doc?semester=${semester}&page=${currentCourse}/${docPath}`,
+          semester,
+          currentCourse,
+          docPath,
+        });
         const res = await fetch(
           `/api/get-doc?semester=${semester}&page=${currentCourse}/${docPath}`,
         );
@@ -474,9 +447,7 @@ export default function DocPage() {
       return (
         <div key={fullPath}>
           <article className="prose dark:prose-invert lg:prose-xl">
-            <h1 className="my-4 text-4xl font-bold text-[#660974] dark:text-[#dfaef8]">
-              {doc.title?.replace(/\.mdx?$/, "")}
-            </h1>
+            <components.h1>{doc.title?.replace(/\.mdx?$/, "")}</components.h1>
             <div className="mathjax-wrapper-isolation">
               <MathJaxComponent>
                 <MDXRemote {...doc.content} components={overrideComponents} />
@@ -497,9 +468,7 @@ export default function DocPage() {
       return (
         <div key={fullPath} className="my-8">
           <article className="prose dark:prose-invert lg:prose-xl">
-            <h1 className="my-4 text-4xl font-bold text-[#660974] dark:text-[#dfaef8]">
-              {doc.title}
-            </h1>
+            <components.h1>{doc.title}</components.h1>
             <iframe
               src={doc.url}
               title={doc.title}
@@ -529,9 +498,7 @@ export default function DocPage() {
       return (
         <div key={fullPath} className="my-8">
           <article className="prose dark:prose-invert lg:prose-xl">
-            <h1 className="my-4 text-4xl font-bold text-[#660974] dark:text-[#dfaef8]">
-              {doc.title}
-            </h1>
+            <components.h1>{doc.title}</components.h1>
             <Image
               src={doc.url}
               alt={doc.title}

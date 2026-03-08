@@ -1,40 +1,54 @@
 import type { MDXComponents } from "mdx/types";
 
-export const components: MDXComponents = {
+export const components = {
   // 标题
-  h1: ({ children }) => <h1 className="my-4 text-4xl font-bold text-[#660974] dark:text-[#dfaef8]">{children}</h1>,
-  h2: ({ children }) => (
-    <h2 className="mt-6 mb-3 text-3xl font-bold flex flex-row text-[#660974] dark:text-[#dfaef8] scroll-mt-36" id={children.toString()}>
-      <p className="mr-[0.2em]">◤</p>
+  h1: ({ children, ...props }) => (
+    <h1 className="text-primary-f50 mt-10 mb-6 text-4xl font-bold" {...props}>
       {children}
+    </h1>
+  ),
+  h2: ({ children, ...props }) => (
+    <h2
+      className="text-primary-f50 mt-6 mb-5 flex scroll-mt-36 flex-row text-3xl font-bold"
+      {...props}>
+      <p className="mr-[0.2em]">◤</p>
+      <div>{children}</div>
     </h2>
   ),
-  h3: ({ children }) => (
-    <h3 className="mt-4 mb-2.5 text-2xl font-bold flex flex-row text-[#660974] dark:text-[#dfaef8] scroll-mt-36" id={children.toString()}>
-      <p className="mr-[0.5em]">■{" "}</p>
-      {children}
+  h3: ({ children, ...props }) => (
+    <h3
+      className="text-primary-f50 mt-4 mb-3 flex scroll-mt-36 flex-row text-2xl font-bold"
+      {...props}>
+      <p className="mr-[0.5em]">■ </p>
+      <div>{children}</div>
     </h3>
   ),
-  h4: ({ children }) => (
-    <h4 className="my-2 text-xl font-bold flex flex-row text-[#660974] dark:text-[#dfaef8] scroll-mt-36" id={children.toString()}>
-      <p className="mr-[0.5em]">▶{" "}</p>
-      {children}
+  h4: ({ children, ...props }) => (
+    <h4
+      className="text-primary-f50 my-2 flex scroll-mt-36 flex-row text-xl font-bold"
+      {...props}>
+      <p className="mr-[0.5em]">▶ </p>
+      <div>{children}</div>
     </h4>
   ),
-  h5: ({ children }) => (
-    <h5 className="my-1.5 text-lg font-bold text-[#660974] dark:text-[#dfaef8] scroll-mt-36" id={children.toString()}>
+  h5: ({ children, ...props }) => (
+    <h5
+      className="text-primary-f50 my-2 scroll-mt-36 text-lg font-bold"
+      {...props}>
       {children}
     </h5>
   ),
-  h6: ({ children }) => (
-    <h6 className="my-1 text-base font-bold text-[#660974] dark:text-[#dfaef8] scroll-mt-36" id={children.toString()}>
+  h6: ({ children, ...props }) => (
+    <h6
+      className="text-primary-f50 my-2 scroll-mt-36 text-base font-bold"
+      {...props}>
       {children}
     </h6>
   ),
   // 文本
   p: ({ children }) => <p className="my-2 leading-7">{children}</p>,
   strong: ({ children, ...props }) => (
-    <strong className="font-bold text-[#A7064D] dark:text-[#ffb3d4]" {...props}>
+    <strong className="text-secondary-f50 font-bold" {...props}>
       {children}
     </strong>
   ),
@@ -43,21 +57,19 @@ export const components: MDXComponents = {
   ol: ({ children }) => <ol className="my-1 list-decimal pl-5">{children}</ol>,
   // 表格
   table: ({ children }) => (
-    <table className="my-4 w-full border-collapse border border-gray-300 dark:border-gray-600">
+    <table className="border-mixed-25 my-4 w-full border-collapse border">
       {children}
     </table>
   ),
   th: ({ children }) => (
-    <th className="border border-gray-300 dark:border-gray-600 bg-gray-200 dark:bg-gray-700 px-4 py-2 text-left">
+    <th className="border-mixed-25 bg-mixed-10 border px-4 py-2 text-left">
       {children}
     </th>
   ),
   td: ({ children }) => (
-    <td className="border border-gray-300 dark:border-gray-600 px-4 py-2">
-      {children}
-    </td>
+    <td className="border-mixed-25 border px-4 py-2">{children}</td>
   ),
-};
+} satisfies MDXComponents;
 
 export default function useMDXComponents(): MDXComponents {
   return components;

@@ -1,7 +1,11 @@
 import Link from "next/link";
 import { ComponentProps } from "react";
 
-import { ArrowTopRightOnSquareIcon, EnvelopeOpenIcon, LinkIcon } from "@heroicons/react/24/outline";
+import {
+  ArrowTopRightOnSquareIcon,
+  EnvelopeOpenIcon,
+  LinkIcon,
+} from "@heroicons/react/24/outline";
 
 export default function InlineLink({
   children,
@@ -9,7 +13,7 @@ export default function InlineLink({
   ...props
 }: ComponentProps<"a">) {
   const linkContent = (
-    <span className="text-secondary-f25 hover:underline hover:font-bold">
+    <span className="text-secondary-f25 hover:font-bold hover:underline">
       {children}
     </span>
   );
@@ -17,33 +21,25 @@ export default function InlineLink({
   if (href && href.startsWith("/")) {
     // Internal link
     return (
-      <Link
-        href={href}
-        {...props}>
+      <Link className="inline" href={href} {...props}>
         {linkContent}
-        <LinkIcon className="inline-block mx-1 h-[1em] w-[1em] align-[-0.125em] text-foreground" />
+        <LinkIcon className="text-foreground mx-1 inline-block h-[1em] w-[1em] align-[-0.125em]" />
       </Link>
     );
   } else if (href && href.startsWith("mailto:")) {
     // Email link
     return (
-      <a
-        href={href}
-        {...props}>
+      <a href={href} {...props}>
         {linkContent}
-        <EnvelopeOpenIcon className="inline-block mx-1 h-[1em] w-[1em] align-[-0.125em] text-foreground" />
+        <EnvelopeOpenIcon className="text-foreground mx-1 inline-block h-[1em] w-[1em] align-[-0.125em]" />
       </a>
     );
   } else {
     // External link
     return (
-      <a
-        href={href}
-        target="_blank"
-        rel="noopener noreferrer"
-        {...props}>
+      <a href={href} target="_blank" rel="noopener noreferrer" {...props}>
         {linkContent}
-        <ArrowTopRightOnSquareIcon className="inline-block mx-1 h-[1em] w-[1em] align-[-0.125em] text-foreground" />
+        <ArrowTopRightOnSquareIcon className="text-foreground mx-1 inline-block h-[1em] w-[1em] align-[-0.125em]" />
       </a>
     );
   }

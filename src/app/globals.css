@@ -1,81 +1,179 @@
 @import "tailwindcss";
 
-@theme inline {
-	--color-background: var(--background);
-	--color-foreground: var(--foreground);
-	--color-mixed-10: color-mix(in srgb, var(--foreground) 10%, var(--background) 90%);
-	--color-mixed-25: color-mix(in srgb, var(--foreground) 25%, var(--background) 75%);
-	--color-mixed-50: color-mix(in srgb, var(--foreground) 50%, var(--background) 50%);
-	--color-mixed-75: color-mix(in srgb, var(--foreground) 75%, var(--background) 25%);
-	--color-mixed-90: color-mix(in srgb, var(--foreground) 90%, var(--background) 10%);
-	--color-primary: var(--primary);
-	--color-primary-f10: color-mix(in srgb, var(--primary) 10%, var(--foreground) 90%);
-	--color-primary-f25: color-mix(in srgb, var(--primary) 25%, var(--foreground) 75%);
-	--color-primary-f50: color-mix(in srgb, var(--primary) 50%, var(--foreground) 50%);
-	--color-primary-f75: color-mix(in srgb, var(--primary) 75%, var(--foreground) 25%);
-	--color-primary-b10: color-mix(in srgb, var(--primary) 10%, var(--background) 90%);
-	--color-primary-b25: color-mix(in srgb, var(--primary) 25%, var(--background) 75%);
-	--color-primary-b50: color-mix(in srgb, var(--primary) 50%, var(--background) 50%);
-	--color-primary-b75: color-mix(in srgb, var(--primary) 75%, var(--background) 25%);
-	--color-secondary: var(--secondary, var(--primary));
-	--color-secondary-f10: color-mix(in srgb, var(--secondary) 10%, var(--foreground) 90%);
-	--color-secondary-f25: color-mix(in srgb, var(--secondary) 25%, var(--foreground) 75%);
-	--color-secondary-f50: color-mix(in srgb, var(--secondary) 50%, var(--foreground) 50%);
-	--color-secondary-f75: color-mix(in srgb, var(--secondary) 75%, var(--foreground) 25%);
-	--color-secondary-b10: color-mix(in srgb, var(--secondary) 10%, var(--background) 90%);
-	--color-secondary-b25: color-mix(in srgb, var(--secondary) 25%, var(--background) 75%);
-	--color-secondary-b50: color-mix(in srgb, var(--secondary) 50%, var(--background) 50%);
-	--color-secondary-b75: color-mix(in srgb, var(--secondary) 75%, var(--background) 25%);
+@theme static {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-mixed-10: color-mix(
+    in srgb,
+    var(--foreground) 10%,
+    var(--background) 90%
+  );
+  --color-mixed-25: color-mix(
+    in srgb,
+    var(--foreground) 25%,
+    var(--background) 75%
+  );
+  --color-mixed-50: color-mix(
+    in srgb,
+    var(--foreground) 50%,
+    var(--background) 50%
+  );
+  --color-mixed-75: color-mix(
+    in srgb,
+    var(--foreground) 75%,
+    var(--background) 25%
+  );
+  --color-mixed-90: color-mix(
+    in srgb,
+    var(--foreground) 90%,
+    var(--background) 10%
+  );
+  --color-primary: var(--primary);
+  --color-primary-f10: color-mix(
+    in srgb,
+    var(--primary) 10%,
+    var(--foreground) 90%
+  );
+  --color-primary-f25: color-mix(
+    in srgb,
+    var(--primary) 25%,
+    var(--foreground) 75%
+  );
+  --color-primary-f50: color-mix(
+    in srgb,
+    var(--primary) 50%,
+    var(--foreground) 50%
+  );
+  --color-primary-f75: color-mix(
+    in srgb,
+    var(--primary) 75%,
+    var(--foreground) 25%
+  );
+  --color-primary-b10: color-mix(
+    in srgb,
+    var(--primary) 10%,
+    var(--background) 90%
+  );
+  --color-primary-b25: color-mix(
+    in srgb,
+    var(--primary) 25%,
+    var(--background) 75%
+  );
+  --color-primary-b50: color-mix(
+    in srgb,
+    var(--primary) 50%,
+    var(--background) 50%
+  );
+  --color-primary-b75: color-mix(
+    in srgb,
+    var(--primary) 75%,
+    var(--background) 25%
+  );
+  --color-secondary: var(--secondary, var(--primary));
+  --color-secondary-f10: color-mix(
+    in srgb,
+    var(--secondary) 10%,
+    var(--foreground) 90%
+  );
+  --color-secondary-f25: color-mix(
+    in srgb,
+    var(--secondary) 25%,
+    var(--foreground) 75%
+  );
+  --color-secondary-f50: color-mix(
+    in srgb,
+    var(--secondary) 50%,
+    var(--foreground) 50%
+  );
+  --color-secondary-f75: color-mix(
+    in srgb,
+    var(--secondary) 75%,
+    var(--foreground) 25%
+  );
+  --color-secondary-b10: color-mix(
+    in srgb,
+    var(--secondary) 10%,
+    var(--background) 90%
+  );
+  --color-secondary-b25: color-mix(
+    in srgb,
+    var(--secondary) 25%,
+    var(--background) 75%
+  );
+  --color-secondary-b50: color-mix(
+    in srgb,
+    var(--secondary) 50%,
+    var(--background) 50%
+  );
+  --color-secondary-b75: color-mix(
+    in srgb,
+    var(--secondary) 75%,
+    var(--background) 25%
+  );
 }
 
 :root {
-	--background: #ffffff;
-	--foreground: #171717;
+  --background: #ffffff;
+  --foreground: #171717;
 }
 :root[data-theme-color="tsinghua"] {
-	--primary: #660974;
-	--secondary: #C83272;
+  --primary: #660974;
+  --secondary: #c83272;
 }
 :root[data-theme-color="blue-purple"] {
-	--primary: #1e40af;
-	--secondary: #4d2ebc;
+  --primary: #205b8b;
+  --secondary: #c21dba;
 }
 
 .dark {
-	--background: #0a0a0a;
-	--foreground: #ededed;
+  --background: #0a0a0a;
+  --foreground: #ededed;
 }
 .dark[data-theme-color="tsinghua"] {
-	--primary: #4f075a;
-	--secondary: #a8054c;
+  --primary: #4f075a;
+  --secondary: #a8054c;
 }
 .dark[data-theme-color="blue-purple"] {
-	--primary: #2a4dc0;
-	--secondary: #5733d9;
+  --primary: #2a4dc0;
+  --secondary: #5733d9;
 }
 
 @theme inline {
-  	--font-serif: var(--font-stone-serif), var(--font-run-yuan-serif), serif;
+  --font-serif: var(--font-stone-serif), var(--font-run-yuan-serif), serif;
+  --font-sans: var(--font-wen-hei-sans), system-ui, sans-serif;
 }
 
-
+:root[data-font="serif"] {
+  --font-body: var(--font-serif);
+}
+:root[data-font="sans"] {
+  --font-body: var(--font-sans);
+}
 
 .scrollbar-thin {
   scrollbar-width: thin; /* Firefox */
   scrollbar-color: #400649 transparent; /* thumb track */
 }
 .scrollbar-thin::-webkit-scrollbar {
-	width: 8px;
+  width: 8px;
 }
 .scrollbar-thin::-webkit-scrollbar-track {
-	background: transparent;
+  background: transparent;
 }
 .scrollbar-thin::-webkit-scrollbar-thumb {
-	background-color: #400649;
-	border-radius: 4px;
+  background-color: #400649;
+  border-radius: 4px;
+}
+.no-scrollbar {
+  scrollbar-width: none; /* Firefox */
 }
 
 body {
-	background: var(--background);
-	color: var(--foreground);
+  background: var(--color-primary-b10);
+  color: var(--foreground);
+  font-family: var(--font-body);
+}
+
+.autospace {
+  text-autospace: normal;
 }
