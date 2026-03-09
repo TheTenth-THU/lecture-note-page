@@ -20,6 +20,7 @@ import "@/app/markdown.css";
 import "@/app/math.css";
 import InlineLink from "@/app/ui/inline-link";
 import MathJaxComponent from "@/components/mathjax-component";
+import { useTheme } from "@/contexts/theme-context";
 import Image from "next/image";
 
 import {
@@ -162,6 +163,8 @@ function RecursiveDirectoryList({
 export default function DocPage() {
   const params = useParams();
   const router = useRouter();
+  const { font } = useTheme();
+  const mathJaxFontName = font === "sans" ? "mathjax-fira" : "mathjax-tex";
 
   /**
    * 解析 slug 参数
@@ -449,7 +452,10 @@ export default function DocPage() {
           <article className="prose dark:prose-invert lg:prose-xl">
             <components.h1>{doc.title?.replace(/\.mdx?$/, "")}</components.h1>
             <div className="mathjax-wrapper-isolation">
-              <MathJaxComponent>
+              <MathJaxComponent
+                fontName={mathJaxFontName}
+                key={`${fullPath}:${mathJaxFontName}`}
+                renderKey={`${fullPath}:${mathJaxFontName}`}>
                 <MDXRemote {...doc.content} components={overrideComponents} />
               </MathJaxComponent>
             </div>

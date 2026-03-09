@@ -1,6 +1,18 @@
 import localFont from "next/font/local";
+import { Fira_Code, Fira_Sans } from "next/font/google";
 
 /* --- Latin fonts --- */
+
+export const firaCode = Fira_Code({
+  variable: "--font-fira-code",
+  subsets: ["latin"],
+});
+
+export const firaSans = Fira_Sans({
+  variable: "--font-fira-sans",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+});
 
 export const stoneSerif = localFont({
   variable: "--font-stone-serif",

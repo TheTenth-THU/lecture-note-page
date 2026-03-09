@@ -13,6 +13,7 @@ interface ThemeContextType {
   setFont: (font: FontFamily) => void;
   color: ThemeColor;
   setColor: (color: ThemeColor) => void;
+  hydrated: boolean;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
@@ -21,6 +22,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [mode, setMode] = useState<ThemeMode>("system");
   const [font, setFont] = useState<FontFamily>("serif");
   const [color, setColor] = useState<ThemeColor>("tsinghua");
+  const [hydrated, setHydrated] = useState(false);
 
   // 初始化加载
   useEffect(() => {
@@ -31,10 +33,16 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     if (savedMode) setMode(savedMode);
     if (savedFont) setFont(savedFont);
     if (savedColor) setColor(savedColor);
+
+    setHydrated(true);
   }, []);
 
   // 应用样式到 HTML 根元素
   useEffect(() => {
+    if (!hydrated) {
+      return;
+    }
+
     const root = document.documentElement;
 
     // 深色模式处理
@@ -55,10 +63,19 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     root.setAttribute("data-theme-color", color);
     localStorage.setItem("theme-color", color);
 
-  }, [mode, font, color]);
+  }, [hydrated, mode, font, color]);
 
   return (
-    <ThemeContext.Provider value={{ mode, setMode, font, setFont, color, setColor }}>
+    <ThemeContext.Provider
+      value={{
+        mode,
+        setMode,
+        font,
+        setFont,
+        color,
+        setColor,
+        hydrated,
+      }}>
       {children}
     </ThemeContext.Provider>
   );

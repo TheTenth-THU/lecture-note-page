@@ -16,7 +16,10 @@ export function ThemeSwitcher() {
           {["light", "dark", "system"].map((m) => (
             <Button
               key={m}
-              onClick={() => setMode(m as any)}
+              onClick={() => {
+                console.log(`Switching theme mode to ${m}`);
+                setMode(m as any);
+              }}
               isCurrent={mode === m}>
               {m === "light" ?
                 "浅色"
@@ -35,7 +38,10 @@ export function ThemeSwitcher() {
           {["serif", "sans"].map((f) => (
             <Button
               key={f}
-              onClick={() => setFont(f as any)}
+              onClick={() => {
+                console.log(`Switching font to ${f}`);
+                setFont(f as any);
+              }}
               isCurrent={font === f}>
               {f === "serif" ? "衬线" : "无衬线"}
             </Button>
@@ -50,7 +56,10 @@ export function ThemeSwitcher() {
           {["tsinghua", "blue-purple"].map((c) => (
             <Button
               key={c}
-              onClick={() => setColor(c as any)}
+              onClick={() => {
+                console.log(`Switching color to ${c}`);
+                setColor(c as any);
+              }}
               isCurrent={color === c}
               className={clsx(
                 "w-9 bg-linear-to-br hover:rounded-full hover:border-2",

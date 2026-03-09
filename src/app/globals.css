@@ -140,9 +140,9 @@
 
 @theme inline {
   --font-serif: var(--font-stone-serif), var(--font-run-yuan-serif), serif;
-  --font-sans: var(--font-wen-hei-sans), system-ui, sans-serif;
+  --font-sans: var(--font-fira-sans), var(--font-wen-hei-sans), system-ui, sans-serif;
 }
-
+  
 :root[data-font="serif"] {
   --font-body: var(--font-serif);
 }
