@@ -29,8 +29,6 @@
     },
     "types": [
       "./cloudflare-env.d.ts",
-      "./cloudflare-env.d.ts",
-      "node",
       "node"
     ]
   },
@@ -42,6 +40,8 @@
     ".next/dev/types/**/*.ts"
   ],
   "exclude": [
-    "node_modules"
+    "node_modules",
+    "public/scripts/mathjax/**/*.ts",
+    ".mathjax-temp"
   ]
 }
