@@ -59,9 +59,6 @@ export default function MathJaxLoader() {
                 packages: {'[+]': ['boldsymbol']},
                 macros: ${JSON.stringify(texMacros)}
               },
-              output: {
-                font: 'mathjax-asana'
-              },
               loader: { 
                 load: ['ui/lazy', '[tex]/boldsymbol'] 
               }
@@ -72,13 +69,14 @@ export default function MathJaxLoader() {
 
       {/* Load MathJax script with fallback */}
       <Script
+        key={scriptSrc} // 当 scriptSrc 变化时，重新加载 Script 组件
         src={scriptSrc}
         strategy="afterInteractive"
         onError={() => {
           console.warn(
             `MathJax CDN load failed (${scriptSrc}). Switching to local backup.`,
           );
-          setScriptSrc("/scripts/mathjax.js");
+          setScriptSrc("/scripts/mathjax.js"); // 本地备份路径：public/scripts/mathjax.js
         }}
       />
     </>

@@ -3,7 +3,9 @@
 	"version": "0.1.0",
 	"private": true,
 	"scripts": {
+		"predev": "node download-mathjax.mjs",
 		"dev": "next dev --turbopack",
+		"prebuild": "node download-mathjax.mjs",
 		"build": "next build",
 		"start": "next start",
 		"lint": "next lint",
