@@ -50,6 +50,32 @@ export const stoneSerif = localFont({
   ],
 });
 
+export const cmuSerif = localFont({
+  variable: "--font-cmu-serif",
+  src: [
+    {
+      path: "../../../public/fonts/CMU.SERIF-ROMAN.woff2",
+      weight: "400",
+      style: "normal",
+    },
+    {
+      path: "../../../public/fonts/CMU.SERIF-ITALIC.woff2",
+      weight: "400",
+      style: "italic",
+    },
+    {
+      path: "../../../public/fonts/CMU.SERIF-BOLD.woff2",
+      weight: "600",
+      style: "normal",
+    },
+    // {
+    //   path: "../../../public/fonts/CMU.SERIF-BOLDITALIC.woff2",
+    //   weight: "700",
+    //   style: "italic",
+    // }
+  ],
+});
+
 /* --- Chinese font --- */
 
 export const wenHeiSans = localFont({
@@ -67,12 +93,12 @@ export const wenHeiSans = localFont({
     },
     {
       path: "../../../public/fonts/汉仪文黑-85W.woff2",
-      weight: "800",
+      weight: "600",
       style: "normal",
     },
     {
       path: "../../../public/fonts/汉仪文黑-85W.woff2",
-      weight: "800",
+      weight: "600",
       style: "italic",
     },
   ],
@@ -93,12 +119,48 @@ export const runYuanSerif = localFont({
     },
     {
       path: "../../../public/fonts/汉仪润圆-75W.woff2",
-      weight: "800",
+      weight: "600",
       style: "normal",
     },
     {
       path: "../../../public/fonts/汉仪润圆-75W.woff2",
-      weight: "800",
+      weight: "600",
+      style: "italic",
+    },
+  ],
+});
+
+export const sourceHanSerif = localFont({
+  variable: "--font-source-han-serif",
+  src: [
+    {
+      path: "../../../public/fonts/SOURCEHANSERIFCN-REGULAR.woff2",
+      weight: "400",
+      style: "normal",
+    },
+    {
+      path: "../../../public/fonts/SOURCEHANSERIFCN-REGULAR.woff2",
+      weight: "400",
+      style: "italic",
+    },
+    {
+      path: "../../../public/fonts/SOURCEHANSERIFCN-SEMIBOLD.woff2",
+      weight: "500",
+      style: "normal",
+    },
+    {
+      path: "../../../public/fonts/SOURCEHANSERIFCN-SEMIBOLD.woff2",
+      weight: "500",
+      style: "italic",
+    },
+    {
+      path: "../../../public/fonts/SourceHanSerifCN-Bold.woff2",
+      weight: "600",
+      style: "normal",
+    },
+    {
+      path: "../../../public/fonts/SourceHanSerifCN-Bold.woff2",
+      weight: "600",
       style: "italic",
     },
   ],

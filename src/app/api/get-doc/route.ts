@@ -9,11 +9,11 @@ import remarkObsidian from "remark-obsidian";
 import remarkWikiLink from "remark-wiki-link";
 import remarkObsidianCallout from "remark-obsidian-callout";
 import rehypeObsidianId from "@/lib/rehype-obsidian-id";
-
+import rehypeSlug from "rehype-slug";
 import rehypeRaw from "rehype-raw";
-// import rehypeKatex from "rehype-katex";
 import rehypeMathToTex from "@/lib/rehype-math-to-tex";
 
+import GithubSlugger from "github-slugger";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import remarkMathToTex from "@/lib/remark-math-to-tex";
 
@@ -346,6 +346,8 @@ export async function GET(request: NextRequest) {
       /!\[\[(.*?)(?:\|(.*?))?\]\]/g,
       (match, path, caption) => `![${caption || ""}](wiki://${path})`,
     );
+
+    const slugger = new GithubSlugger();
     const mdxSource = await serialize(processedContent, {
       mdxOptions: {
         format: "md",
@@ -356,7 +358,8 @@ export async function GET(request: NextRequest) {
             {
               aliasDivider: "|",
               pageResolver: (name: string) => [name],
-              hrefTemplate: (permalink: string) => `wiki://${permalink}`,
+              hrefTemplate: (permalink: string) =>
+                `wiki://${slugger.slug(permalink)}`,
             },
           ],
           remarkMath,
@@ -378,6 +381,7 @@ export async function GET(request: NextRequest) {
               ],
             },
           ],
+          rehypeSlug,
           rehypeObsidianId,
           // rehypeKatex,
           rehypeMathToTex,

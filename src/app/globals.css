@@ -139,8 +139,10 @@
 }
 
 @theme inline {
-  --font-serif: var(--font-stone-serif), var(--font-run-yuan-serif), serif;
-  --font-sans: var(--font-fira-sans), var(--font-wen-hei-sans), system-ui, sans-serif;
+  --font-serif: var(--font-cmu-serif), var(--font-source-han-serif), serif;
+  --font-sans: var(--font-fira-sans), system-ui, sans-serif;
+  --font-genshin: var(--font-wen-hei-sans), system-ui, sans-serif;
+  --font-rail: var(--font-stone-serif), var(--font-run-yuan-serif), serif;
 }
   
 :root[data-font="serif"] {
@@ -148,6 +150,12 @@
 }
 :root[data-font="sans"] {
   --font-body: var(--font-sans);
+}
+:root[data-font="genshin"] {
+  --font-body: var(--font-genshin);
+}
+:root[data-font="rail"] {
+  --font-body: var(--font-rail);
 }
 
 .scrollbar-thin {

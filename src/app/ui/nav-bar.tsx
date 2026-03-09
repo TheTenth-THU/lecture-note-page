@@ -56,8 +56,7 @@ export function Header() {
             isShrunk ? "text-2xl" : "text-4xl"
           }`}>
           Lecture Notes{" "}
-          <span
-            className={`${runYuanSerif.className} ${isShrunk ? "text-2xl" : "text-3xl"}`}>
+          <span className={`${isShrunk ? "text-2xl" : "text-3xl"}`}>
             课程笔记
           </span>
         </h1>

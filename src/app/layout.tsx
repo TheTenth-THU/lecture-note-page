@@ -9,9 +9,11 @@ import { ThemeSwitcher } from "@/app/ui/theme-switcher";
 import {
   firaCode,
   firaSans,
+  cmuSerif,
   stoneSerif,
   wenHeiSans,
   runYuanSerif,
+  sourceHanSerif,
 } from "@/app/ui/fonts";
 import { Header, Footer } from "@/app/ui/nav-bar";
 import MathJaxLoader from "@/components/mathjax-loader";
@@ -29,7 +31,7 @@ export default function RootLayout({
   return (
     <html
       lang="zh"
-      className={`${firaCode.variable} ${firaSans.variable} ${stoneSerif.variable} ${wenHeiSans.variable} ${runYuanSerif.variable}`}>
+      className={`${firaCode.variable} ${firaSans.variable} ${cmuSerif.variable} ${stoneSerif.variable} ${wenHeiSans.variable} ${runYuanSerif.variable} ${sourceHanSerif.variable}`}>
       <body className="autospace text-lg">
         <ThemeProvider>
           {/* Header is now a client component to handle scroll effects */}

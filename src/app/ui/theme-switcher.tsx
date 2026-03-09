@@ -35,15 +35,18 @@ export function ThemeSwitcher() {
       <div className="flex items-baseline justify-start gap-4">
         <p className="mb-2 text-sm font-semibold">字体</p>
         <div className="flex gap-2">
-          {["serif", "sans"].map((f) => (
+          {["serif", "sans", "genshin", "rail"].map((f) => (
             <Button
               key={f}
               onClick={() => {
                 console.log(`Switching font to ${f}`);
                 setFont(f as any);
               }}
+              style={{
+                fontFamily: `var(--font-${f})`,
+              }}
               isCurrent={font === f}>
-              {f === "serif" ? "衬线" : "无衬线"}
+              文
             </Button>
           ))}
         </div>
