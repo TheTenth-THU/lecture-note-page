@@ -7,15 +7,17 @@ import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import remarkObsidian from "remark-obsidian";
 import remarkWikiLink from "remark-wiki-link";
-import remarkObsidianCallout from "remark-obsidian-callout";
+import remarkRuby from "@/lib/remark-ruby";
+import remarkMathToTex from "@/lib/remark-math-to-tex";
+
 import rehypeObsidianId from "@/lib/rehype-obsidian-id";
+import rehypeCallouts, { type UserOptions as RehypeCalloutsOptions } from "rehype-callouts";
 import rehypeSlug from "rehype-slug";
 import rehypeRaw from "rehype-raw";
 import rehypeMathToTex from "@/lib/rehype-math-to-tex";
 
 import GithubSlugger from "github-slugger";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
-import remarkMathToTex from "@/lib/remark-math-to-tex";
 
 interface GitHubFileResponse {
   type: string;
@@ -53,6 +55,38 @@ const debugPlugin = () => {
 
     console.log("--- AST DEBUG END ---");
   };
+};
+
+const rehypeCalloutOptions: RehypeCalloutsOptions = {
+  theme: "obsidian",
+  aliases: {
+    definition: ["def"],
+    theorem: ["thm"],
+    lemma: ["lem"],
+    proposition: ["prop"],
+    corollary: ["cor"],
+    proof: ["pf"],
+  },
+  callouts: {
+    definition: {
+      title: "Definition",
+    },
+    theorem: {
+      title: "Theorem",
+    },
+    lemma: {
+      title: "Lemma",
+    },
+    proposition: {
+      title: "Proposition",
+    },
+    corollary: {
+      title: "Corollary",
+    },
+    proof: {
+      title: "Proof",
+    },
+  },
 };
 
 export async function GET(request: NextRequest) {
@@ -362,11 +396,11 @@ export async function GET(request: NextRequest) {
                 `wiki://${slugger.slug(permalink)}`,
             },
           ],
+          remarkRuby,
           remarkMath,
           remarkMathToTex,
           // debugPlugin,
           // remarkObsidian,
-          remarkObsidianCallout,
         ],
         rehypePlugins: [
           [
@@ -381,6 +415,7 @@ export async function GET(request: NextRequest) {
               ],
             },
           ],
+          [rehypeCallouts, rehypeCalloutOptions],
           rehypeSlug,
           rehypeObsidianId,
           // rehypeKatex,
