@@ -48,3 +48,4 @@ next-env.d.ts
 .github/
 test/
 public/scripts/mathjax*
+contents/

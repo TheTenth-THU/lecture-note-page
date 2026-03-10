@@ -46,7 +46,7 @@ export function ThemeSwitcher() {
                 fontFamily: `var(--font-${f})`,
               }}
               isCurrent={font === f}>
-              文
+              文/Aa
             </Button>
           ))}
         </div>

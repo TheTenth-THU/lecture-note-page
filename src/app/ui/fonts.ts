@@ -145,22 +145,22 @@ export const sourceHanSerif = localFont({
     },
     {
       path: "../../../public/fonts/SOURCEHANSERIFCN-SEMIBOLD.woff2",
-      weight: "500",
+      weight: "600",
       style: "normal",
     },
     {
       path: "../../../public/fonts/SOURCEHANSERIFCN-SEMIBOLD.woff2",
-      weight: "500",
+      weight: "600",
       style: "italic",
     },
     {
       path: "../../../public/fonts/SourceHanSerifCN-Bold.woff2",
-      weight: "600",
+      weight: "700",
       style: "normal",
     },
     {
       path: "../../../public/fonts/SourceHanSerifCN-Bold.woff2",
-      weight: "600",
+      weight: "700",
       style: "italic",
     },
   ],

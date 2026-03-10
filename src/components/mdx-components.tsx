@@ -52,6 +52,12 @@ export const components = {
       {children}
     </strong>
   ),
+  hr: (props) => (
+    <hr
+      className="via-mixed-50 my-4 h-px border-0 bg-linear-to-r from-transparent to-transparent"
+      {...props}
+    />
+  ),
   // 列表
   ul: ({ children }) => <ul className="my-1 list-disc pl-5">{children}</ul>,
   ol: ({ children }) => <ol className="my-1 list-decimal pl-5">{children}</ol>,
