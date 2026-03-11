@@ -133,6 +133,81 @@ rt {
   padding-bottom: 0.1em;
 }
 
+.doc-pre {
+  margin-block: 1rem;
+  border: 1px solid color-mix(in srgb, var(--foreground) 14%, transparent);
+  background: color-mix(in srgb, var(--background) 88%, var(--foreground) 4%);
+}
+
+.tikz-block {
+  margin-block: 1.5rem;
+  border: 1px solid color-mix(in srgb, var(--foreground) 14%, transparent);
+  border-radius: 1rem;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at top left, color-mix(in srgb, var(--foreground) 7%, transparent), transparent 38%),
+    color-mix(in srgb, var(--background) 92%, var(--foreground) 3%);
+}
+
+.tikz-block__title {
+  padding: 0.85rem 1rem 0;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--foreground) 70%, transparent);
+}
+
+.tikz-block__canvas {
+  overflow-x: auto;
+  padding: 1rem;
+}
+
+.tikz-block__image {
+  display: block;
+  max-width: none;
+  height: auto;
+  margin-inline: auto;
+}
+
+.tikz-block__status {
+  margin: 0;
+  text-align: center;
+  color: color-mix(in srgb, var(--foreground) 70%, transparent);
+}
+
+.tikz-block__status--error {
+  color: #b91c1c;
+  white-space: pre-wrap;
+}
+
+.dark .tikz-block__status--error {
+  color: #fca5a5;
+}
+
+.tikz-block__source {
+  border-top: 1px solid color-mix(in srgb, var(--foreground) 10%, transparent);
+}
+
+.tikz-block__source summary {
+  cursor: pointer;
+  list-style: none;
+  padding: 0.85rem 1rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.tikz-block__source summary::-webkit-details-marker {
+  display: none;
+}
+
+.tikz-block__source pre {
+  margin: 0;
+  overflow-x: auto;
+  padding: 0 1rem 1rem;
+  font-size: 0.9rem;
+}
+
 /* --- KaTeX Styles --- */
 
 .katex .katex-html {

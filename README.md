@@ -1,3 +1,16 @@
+[TikZ 代码块]
+
+项目现在支持用 fenced code block 渲染 TikZ：
+
+```md
+```tikz
+\begin{tikzpicture}
+	\draw(0,0)--(1,1);
+\end{tikzpicture}
+```
+```
+
+也支持完整 LaTeX 文档形式的输入。当前实现会把文档拆成 preamble 和正文，然后通过站内接口代理到外部公开渲染服务进行编译并返回图片结果。默认使用 QuickLaTeX，可通过 Wrangler 变量 `TIKZ_RENDER_ENDPOINT`、`TIKZ_RENDER_HOST` 和 `TIKZ_RENDER_TIMEOUT_MS` 覆盖。
 # OpenNext Starter
 
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).

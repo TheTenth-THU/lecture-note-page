@@ -9,6 +9,9 @@ declare namespace Cloudflare {
 		GITHUB_NOTE_TOKEN: SecretsStoreSecret;
 		ASSETS: Fetcher;
 		NEXTJS_ENV: string;
+        TIKZ_RENDER_ENDPOINT?: string;
+        TIKZ_RENDER_HOST?: string;
+        TIKZ_RENDER_TIMEOUT_MS?: string;
 	}
 }
 interface CloudflareEnv extends Cloudflare.Env {}

@@ -3,7 +3,6 @@
  * https://developers.cloudflare.com/workers/wrangler/configuration/
  */
 {
-	"$schema": "node_modules/wrangler/config-schema.json",
 	"routes": [
 		{
 			"pattern": "notes.zhenxing.space",
@@ -41,12 +40,16 @@
 			"store_id": "daaf62694d4a4d49bca80b3f6edd07bf",
 			"secret_name": "GITHUB_NOTE_TOKEN"
 		}
-	]
+	],
 	/**
 	 * Environment Variables
 	 * https://developers.cloudflare.com/workers/wrangler/configuration/#environment-variables
 	 */
-	// "vars": { "MY_VARIABLE": "production_value" }
+	"vars": {
+		"TIKZ_RENDER_ENDPOINT": "https://www.quicklatex.com/latex3.f",
+		"TIKZ_RENDER_HOST": "quicklatex.com",
+		"TIKZ_RENDER_TIMEOUT_MS": "45000"
+	}
 	/**
 	 * Note: Use secrets to store sensitive data.
 	 * https://developers.cloudflare.com/workers/configuration/secrets/

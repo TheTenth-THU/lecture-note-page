@@ -47,5 +47,6 @@ next-env.d.ts
 .vscode/
 .github/
 test/
-public/scripts/mathjax*
+public/scripts/mathjax/
+public/scripts/tikzjax/
 contents/

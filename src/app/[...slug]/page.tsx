@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { Children, isValidElement, useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 
 import { MDXComponents } from "mdx/types";
@@ -20,6 +20,7 @@ import "@/app/markdown.css";
 import "@/app/math.css";
 import InlineLink from "@/app/ui/inline-link";
 import MathJaxComponent from "@/components/mathjax-component";
+import TikzBlock from "@/components/tikz-block";
 import { useTheme } from "@/contexts/theme-context";
 import Image from "next/image";
 
@@ -50,6 +51,46 @@ interface DocResponse {
   title?: string;
   content?: MDXRemoteSerializeResult;
   url?: string;
+}
+
+function readTextContent(node: unknown): string {
+  if (typeof node === "string") {
+    return node;
+  }
+
+  if (Array.isArray(node)) {
+    return node.map(readTextContent).join("");
+  }
+
+  if (
+    isValidElement<{ children?: unknown }>(node) &&
+    Object.prototype.hasOwnProperty.call(node.props, "children")
+  ) {
+    return readTextContent(node.props.children);
+  }
+
+  return "";
+}
+
+function extractTikzFence(children: unknown) {
+  const onlyChild = Children.count(children) === 1 ? Children.only(children) : null;
+
+  if (
+    !onlyChild ||
+    !isValidElement<{ className?: string; children?: unknown }>(onlyChild)
+  ) {
+    return null;
+  }
+
+  const className = onlyChild.props.className || "";
+  if (!className.includes("language-tikz")) {
+    return null;
+  }
+
+  return {
+    className,
+    source: readTextContent(onlyChild.props.children).trim(),
+  };
 }
 
 /**
@@ -383,6 +424,41 @@ export default function DocPage() {
    */
   const overrideComponents: MDXComponents = {
     ...components,
+    pre: ({ children, ...props }) => {
+      const tikzFence = extractTikzFence(children);
+      if (tikzFence?.source) {
+        return <TikzBlock source={tikzFence.source} />;
+      }
+
+      return (
+        <pre className="doc-pre overflow-x-auto rounded-2xl px-4 py-3" {...props}>
+          {children}
+        </pre>
+      );
+    },
+    code: ({ children, className, ...props }) => {
+      if (className?.includes("language-tikz")) {
+        return (
+          <code className={className} {...props}>
+            {children}
+          </code>
+        );
+      }
+
+      if (!className) {
+        return (
+          <code className="rounded-md bg-black/8 px-1.5 py-0.5 text-[0.9em] dark:bg-white/10" {...props}>
+            {children}
+          </code>
+        );
+      }
+
+      return (
+        <code className={className} {...props}>
+          {children}
+        </code>
+      );
+    },
     a: ({ children, href, ...props }) => {
       let finalHref = href || "";
       // 处理 wiki:// 链接
