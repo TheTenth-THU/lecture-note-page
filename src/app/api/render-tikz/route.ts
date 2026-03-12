@@ -35,7 +35,8 @@ export async function POST(request: NextRequest) {
   const renderEndpoint = env.TIKZ_RENDER_ENDPOINT || DEFAULT_RENDER_ENDPOINT;
   const renderHost = env.TIKZ_RENDER_HOST || DEFAULT_RENDER_HOST;
   const timeoutMs = Number.parseInt(env.TIKZ_RENDER_TIMEOUT_MS || "", 10);
-  const parsedTimeoutMs = Number.isFinite(timeoutMs) ? timeoutMs : DEFAULT_TIMEOUT_MS;
+  const parsedTimeoutMs =
+    Number.isFinite(timeoutMs) ? timeoutMs : DEFAULT_TIMEOUT_MS;
   const { body, preamble } = parseTikzSource(source);
 
   if (!body) {
@@ -48,7 +49,7 @@ export async function POST(request: NextRequest) {
   const formBody = encodeQuickLatexForm({
     formula: body,
     preamble,
-    fsize: "17px",
+    fsize: "14px",
     fcolor: "000000",
     mode: "0",
     out: "1",
@@ -57,7 +58,10 @@ export async function POST(request: NextRequest) {
   });
 
   const abortController = new AbortController();
-  const timeoutHandle = setTimeout(() => abortController.abort(), parsedTimeoutMs);
+  const timeoutHandle = setTimeout(
+    () => abortController.abort(),
+    parsedTimeoutMs,
+  );
 
   try {
     const response = await fetch(renderEndpoint, {
@@ -94,19 +98,19 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(parsed, {
       status: 200,
       headers: {
-        "Cache-Control": "public, max-age=86400, s-maxage=86400, stale-while-revalidate=604800",
+        "Cache-Control":
+          "public, max-age=86400, s-maxage=86400, stale-while-revalidate=604800",
       },
     });
   } catch (error) {
-    const isAbortError =
-      error instanceof Error && error.name === "AbortError";
+    const isAbortError = error instanceof Error && error.name === "AbortError";
 
     return NextResponse.json(
       {
         error:
-          isAbortError ?
-            "TikZ 渲染超时，请稍后重试。"
-          : "TikZ 渲染服务暂时不可用。",
+          isAbortError ? "TikZ 渲染超时，请稍后重试。" : (
+            "TikZ 渲染服务暂时不可用。"
+          ),
       },
       { status: 504 },
     );

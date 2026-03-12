@@ -73,7 +73,8 @@ function readTextContent(node: unknown): string {
 }
 
 function extractTikzFence(children: unknown) {
-  const onlyChild = Children.count(children) === 1 ? Children.only(children) : null;
+  const onlyChild =
+    Children.count(children) === 1 ? Children.only(children) : null;
 
   if (
     !onlyChild ||
@@ -89,7 +90,11 @@ function extractTikzFence(children: unknown) {
 
   return {
     className,
-    source: readTextContent(onlyChild.props.children).trim(),
+    source: readTextContent(onlyChild.props.children)
+      .trim()
+      .replaceAll("\\begin{tikzpicture}\n", "\\begin{tikzpicture}[scale=0.8]\n")
+      .replaceAll("\\Large", "")
+      .replaceAll("\\large", ""),
   };
 }
 
@@ -431,7 +436,9 @@ export default function DocPage() {
       }
 
       return (
-        <pre className="doc-pre overflow-x-auto rounded-2xl px-4 py-3" {...props}>
+        <pre
+          className="doc-pre overflow-x-auto rounded-2xl px-4 py-3"
+          {...props}>
           {children}
         </pre>
       );
@@ -447,7 +454,9 @@ export default function DocPage() {
 
       if (!className) {
         return (
-          <code className="rounded-md bg-black/8 px-1.5 py-0.5 text-[0.9em] dark:bg-white/10" {...props}>
+          <code
+            className="rounded-md bg-black/8 px-1.5 py-0.5 text-[0.9em] dark:bg-white/10"
+            {...props}>
             {children}
           </code>
         );
