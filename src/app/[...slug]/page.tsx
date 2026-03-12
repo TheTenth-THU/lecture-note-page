@@ -23,6 +23,8 @@ import MathJaxComponent from "@/components/mathjax-component";
 import TikzBlock from "@/components/tikz-block";
 import { useTheme } from "@/contexts/theme-context";
 import Image from "next/image";
+import { firaCode } from "@/app/ui/fonts";
+import clsx from "clsx";
 
 import {
   FolderOpenIcon,
@@ -437,7 +439,7 @@ export default function DocPage() {
 
       return (
         <pre
-          className="doc-pre overflow-x-auto rounded-2xl px-4 py-3"
+          className={`doc-pre overflow-x-auto rounded-2xl px-4 py-3 ${firaCode.className}`}
           {...props}>
           {children}
         </pre>
@@ -446,7 +448,7 @@ export default function DocPage() {
     code: ({ children, className, ...props }) => {
       if (className?.includes("language-tikz")) {
         return (
-          <code className={className} {...props}>
+          <code className={clsx(className, firaCode.className)} {...props}>
             {children}
           </code>
         );
@@ -455,7 +457,10 @@ export default function DocPage() {
       if (!className) {
         return (
           <code
-            className="rounded-md bg-black/8 px-1.5 py-0.5 text-[0.9em] dark:bg-white/10"
+            className={clsx(
+              "rounded-md bg-black/8 px-1.5 py-0.5 text-[0.9em] dark:bg-white/10",
+              firaCode.className,
+            )}
             {...props}>
             {children}
           </code>
@@ -463,7 +468,7 @@ export default function DocPage() {
       }
 
       return (
-        <code className={className} {...props}>
+        <code className={clsx(className, firaCode.className)} {...props}>
           {children}
         </code>
       );

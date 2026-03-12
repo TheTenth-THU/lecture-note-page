@@ -1,5 +1,6 @@
 "use client";
 
+import { firaCode } from "@/app/ui/fonts";
 import { useEffect, useState } from "react";
 
 interface TikzRenderSuccess {
@@ -40,13 +41,17 @@ async function requestTikzRender(source: string): Promise<TikzRenderResult> {
     body: JSON.stringify({ source }),
   })
     .then(async (response) => {
-      const payload = (await response.json()) as TikzRenderResult | { error?: string };
+      const payload = (await response.json()) as
+        | TikzRenderResult
+        | { error?: string };
 
       if (!response.ok) {
         const failure: TikzRenderFailure = {
           ok: false,
           error:
-            "error" in payload && payload.error ? payload.error : "TikZ 渲染失败。",
+            "error" in payload && payload.error ?
+              payload.error
+            : "TikZ 渲染失败。",
         };
         tikzRenderCache.set(source, failure);
         return failure;
@@ -59,10 +64,7 @@ async function requestTikzRender(source: string): Promise<TikzRenderResult> {
     .catch((error: unknown) => {
       const failure: TikzRenderFailure = {
         ok: false,
-        error:
-          error instanceof Error ?
-            error.message
-          : "TikZ 渲染请求失败。",
+        error: error instanceof Error ? error.message : "TikZ 渲染请求失败。",
       };
       tikzRenderCache.set(source, failure);
       return failure;
@@ -118,7 +120,7 @@ export default function TikzBlock({ source }: { source: string }) {
       <details className="tikz-block__source">
         <summary>查看源码</summary>
         <pre>
-          <code>{source}</code>
+          <code className={firaCode.className}>{source}</code>
         </pre>
       </details>
     </figure>
