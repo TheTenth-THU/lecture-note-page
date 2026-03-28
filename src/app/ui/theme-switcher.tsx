@@ -5,7 +5,23 @@ import clsx from "clsx";
 import { Button } from "./button";
 
 export function ThemeSwitcher() {
-  const { mode, setMode, font, setFont, color, setColor } = useTheme();
+  const {
+    mode,
+    setMode,
+    font,
+    setFont,
+    vectorStyle,
+    setVectorStyle,
+    color,
+    setColor,
+  } = useTheme();
+  const modeOptions = ["light", "dark", "system"] as const;
+  const fontOptions = ["serif", "sans", "genshin", "rail"] as const;
+  const colorOptions = ["tsinghua", "blue-purple"] as const;
+  const vectorStyleOptions = [
+    { key: "arrow-bold", label: "箭头粗体" },
+    { key: "bold-no-arrow", label: "粗斜无箭头" },
+  ] as const;
 
   return (
     <div className="bg-primary-b25 space-y-4 rounded-lg">
@@ -13,14 +29,14 @@ export function ThemeSwitcher() {
       <div className="flex items-baseline justify-start gap-4">
         <p className="mb-2 text-sm font-semibold">外观</p>
         <div className="flex gap-2">
-          {["light", "dark", "system"].map((m) => (
+          {modeOptions.map((m) => (
             <Button
               key={m}
               onClick={() => {
                 console.debug(
                   `[ThemeSwitcher] Switching theme mode to ${m} \n正在切换主题模式到 ${m}`,
                 );
-                setMode(m as any);
+                setMode(m);
               }}
               isCurrent={mode === m}>
               {m === "light" ?
@@ -37,14 +53,14 @@ export function ThemeSwitcher() {
       <div className="flex items-baseline justify-start gap-4">
         <p className="mb-2 text-sm font-semibold">字体</p>
         <div className="flex gap-2">
-          {["serif", "sans", "genshin", "rail"].map((f) => (
+          {fontOptions.map((f) => (
             <Button
               key={f}
               onClick={() => {
                 console.debug(
                   `[ThemeSwitcher] Switching font to ${f} \n正在切换字体到 ${f}`,
                 );
-                setFont(f as any);
+                setFont(f);
               }}
               style={{
                 fontFamily: `var(--font-${f})`,
@@ -56,18 +72,38 @@ export function ThemeSwitcher() {
         </div>
       </div>
 
+      {/* 向量样式切换 */}
+      <div className="flex items-baseline justify-start gap-4">
+        <p className="mb-2 text-sm font-semibold">向量</p>
+        <div className="flex gap-2">
+          {vectorStyleOptions.map((item) => (
+            <Button
+              key={item.key}
+              onClick={() => {
+                console.debug(
+                  `[ThemeSwitcher] Switching vector style to ${item.key} \n正在切换向量样式到 ${item.key}`,
+                );
+                setVectorStyle(item.key);
+              }}
+              isCurrent={vectorStyle === item.key}>
+              {item.label}
+            </Button>
+          ))}
+        </div>
+      </div>
+
       {/* 颜色切换 */}
       <div className="flex items-center justify-start gap-4">
         <p className="mb-2 text-sm font-semibold">主题</p>
         <div className="flex gap-2">
-          {["tsinghua", "blue-purple"].map((c) => (
+          {colorOptions.map((c) => (
             <Button
               key={c}
               onClick={() => {
                 console.debug(
                   `[ThemeSwitcher] Switching color to ${c} \n正在切换主题颜色到 ${c}`,
                 );
-                setColor(c as any);
+                setColor(c);
               }}
               isCurrent={color === c}
               className={clsx(

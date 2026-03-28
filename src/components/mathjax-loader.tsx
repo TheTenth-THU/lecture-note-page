@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useTheme } from "@/contexts/theme-context";
+import { useTheme, type VectorStyle } from "@/contexts/theme-context";
 
 const LOCAL_SCRIPT_SRC = "/scripts/mathjax/tex-mml-chtml-nofont.js";
 const CDN_SCRIPT_SRC =
@@ -37,47 +37,59 @@ function cleanupMathJaxScripts() {
   document.getElementById(RUNTIME_SCRIPT_ID)?.remove();
 }
 
-const TEX_MACROS: Record<string, string | [string, number]> = {
+function getVectorMacro(vectorStyle: VectorStyle): [string, number] {
+  if (vectorStyle === "bold-no-arrow") {
+    return ["{\\boldsymbol{#1}}", 1];
+  }
+
+  return ["{\\vec{\\boldsymbol{#1}}}", 1];
+}
+
+function getTexMacros(
+  vectorStyle: VectorStyle,
+): Record<string, string | [string, number]> {
   // 微积分
-  dif: "{\\mathop{}\\!\\mathrm{d}}",
-  Dif: "{\\mathop{}\\!\\mathrm{D}}",
-  dint: "{\\displaystyle\\int}",
-  // 向量
-  v: ["{\\vec{\\boldsymbol{#1}}}", 1],
-  vu: ["{\\hat{\\boldsymbol{#1}}}", 1],
-  vr: "{\\v{r}}",
-  vv: "{\\v{v}}",
-  vs: ["{\\v{\\mathcal{#1}}}", 1],
-  vsr: ["{\\v{\\mathscr{#1}}}", 1],
-  sr: "{\\mathscr{r}}",
-  t: ["{\\tilde{#1}}", 1],
-  cpq: ["{\\t{#1}}", 1],
-  cpv: ["{\\t{\\v{#1}}}", 1],
-  bra: ["{\\left\\langle #1 \\right|}", 1],
-  ket: ["{\\left| #1 \\right\\rangle}", 1],
-  braket: ["{\\left\\langle #1 \\right\\rangle}", 1],
-  // 字形
-  rmu: ["{\\mathop{}\\!\\mathrm{#1}}", 1],
-  I: "{\\mathbb{i}}",
-  J: "{\\mathbb{j}}",
-  e: "{\\mathrm{e}}",
-  // 文本
-  mark: ["{\\bbox[5pt, border:1.5px solid]{#1}}", 1],
-  Sa: "{\\mathop{\\mathrm{Sa}}}",
-  sinc: "{\\mathop{\\mathrm{sinc}}}",
-  sgn: "{\\mathop{\\mathrm{sgn}}}",
-  // 关系符号
-  join: "{\\mathop{\\Join}\\limits}",
-  ojoin: "{\\mathop{\\mathrm{⟗}}\\limits}",
-  fojoin: "{\\ojoin}",
-  lojoin: "{\\mathop{\\mathrm{⟕}}\\limits}",
-  rojoin: "{\\mathop{\\mathrm{⟖}}\\limits}",
-};
+  return {
+    dif: "{\\mathop{}\\!\\mathrm{d}}",
+    Dif: "{\\mathop{}\\!\\mathrm{D}}",
+    dint: "{\\displaystyle\\int}",
+    // 向量
+    v: getVectorMacro(vectorStyle),
+    vu: ["{\\hat{\\boldsymbol{#1}}}", 1],
+    vr: "{\\v{r}}",
+    vv: "{\\v{v}}",
+    vs: ["{\\v{\\mathcal{#1}}}", 1],
+    vsr: ["{\\v{\\mathscr{#1}}}", 1],
+    sr: "{\\mathscr{r}}",
+    t: ["{\\tilde{#1}}", 1],
+    cpq: ["{\\t{#1}}", 1],
+    cpv: ["{\\t{\\v{#1}}}", 1],
+    bra: ["{\\left\\langle #1 \\right|}", 1],
+    ket: ["{\\left| #1 \\right\\rangle}", 1],
+    braket: ["{\\left\\langle #1 \\right\\rangle}", 1],
+    // 字形
+    rmu: ["{\\mathop{}\\!\\mathrm{#1}}", 1],
+    I: "{\\mathbb{i}}",
+    J: "{\\mathbb{j}}",
+    e: "{\\mathrm{e}}",
+    // 文本
+    mark: ["{\\bbox[5pt, border:1.5px solid]{#1}}", 1],
+    Sa: "{\\mathop{\\mathrm{Sa}}}",
+    sinc: "{\\mathop{\\mathrm{sinc}}}",
+    sgn: "{\\mathop{\\mathrm{sgn}}}",
+    // 关系符号
+    join: "{\\mathop{\\Join}\\limits}",
+    ojoin: "{\\mathop{\\mathrm{⟗}}\\limits}",
+    fojoin: "{\\ojoin}",
+    lojoin: "{\\mathop{\\mathrm{⟕}}\\limits}",
+    rojoin: "{\\mathop{\\mathrm{⟖}}\\limits}",
+  };
+}
 
 export default function MathJaxLoader() {
   // 默认本地优先，如果失败则切换到 jsDelivr
   const [scriptSrc, setScriptSrc] = useState(LOCAL_SCRIPT_SRC);
-  const { font, hydrated } = useTheme();
+  const { font, vectorStyle, hydrated } = useTheme();
   const mathJaxFontName = font === "sans" ? "mathjax-fira" : "mathjax-tex";
 
   useEffect(() => {
@@ -117,7 +129,7 @@ export default function MathJaxLoader() {
     }
 
     let cancelled = false;
-    const runtimeId = `${scriptSrc}:${mathJaxFontName}:${Date.now()}`;
+    const runtimeId = `${scriptSrc}:${mathJaxFontName}:${vectorStyle}:${Date.now()}`;
 
     window.__activeMathJaxFont__ = undefined;
     window.__mathJaxRuntimeId__ = runtimeId;
@@ -127,11 +139,12 @@ export default function MathJaxLoader() {
     const configScript = document.createElement("script");
     configScript.id = CONFIG_SCRIPT_ID;
     configScript.type = "text/javascript";
+    const texMacros = getTexMacros(vectorStyle);
     configScript.text = `
       window.MathJax = {
         tex: {
           packages: {'[+]': ['boldsymbol']},
-          macros: ${JSON.stringify(TEX_MACROS)}
+          macros: ${JSON.stringify(texMacros)}
         },
         output: {
           font: '${mathJaxFontName}',
@@ -159,6 +172,7 @@ export default function MathJaxLoader() {
           {
             scriptSrc,
             mathJaxFontName,
+            vectorStyle,
             runtimeId,
           },
         );
@@ -191,6 +205,7 @@ export default function MathJaxLoader() {
       console.debug("[MathJaxLoader] Runtime ready \n运行时准备就绪 \n", {
         scriptSrc,
         mathJaxFontName,
+        vectorStyle,
         runtimeId,
       });
     };
@@ -217,7 +232,7 @@ export default function MathJaxLoader() {
       }
       cleanupMathJaxScripts();
     };
-  }, [hydrated, mathJaxFontName, scriptSrc]);
+  }, [hydrated, mathJaxFontName, scriptSrc, vectorStyle]);
 
   return null;
 }

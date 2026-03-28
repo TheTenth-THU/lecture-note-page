@@ -3,7 +3,7 @@
 import { Children, isValidElement, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { MDXComponents } from "mdx/types";
-import ReactMarkdown, { defaultUrlTransform } from "react-markdown";
+import ReactMarkdown, { Components, defaultUrlTransform } from "react-markdown";
 
 import Image from "next/image";
 import clsx from "clsx";
@@ -36,7 +36,7 @@ export type DocResponse =
       kind: "mdx";
       title: string;
       source: string;
-      options?: any;
+      options?: unknown;
     }
   | {
       kind: "text";
@@ -291,8 +291,9 @@ export default function DocClient({
   doc,
 }: DocClientProps) {
   const router = useRouter();
-  const { font } = useTheme();
+  const { font, vectorStyle } = useTheme();
   const mathJaxFontName = font === "sans" ? "mathjax-fira" : "mathjax-tex";
+  const mathRenderKey = `${fullPath}:${mathJaxFontName}:${vectorStyle}`;
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isShrunk, setIsShrunk] = useState(false);
@@ -443,13 +444,13 @@ export default function DocClient({
               <div className="mathjax-wrapper-isolation">
                 <MathJaxComponent
                   fontName={mathJaxFontName}
-                  key={`${fullPath}:${mathJaxFontName}`}
-                  renderKey={`${fullPath}:${mathJaxFontName}`}>
+                  key={mathRenderKey}
+                  renderKey={mathRenderKey}>
                   <ReactMarkdown
                     urlTransform={mdUrlTransform}
                     remarkPlugins={mdxSerializeOptions.mdxOptions.remarkPlugins}
                     rehypePlugins={mdxSerializeOptions.mdxOptions.rehypePlugins}
-                    components={overrideComponents as any}>
+                    components={overrideComponents as Components}>
                     {doc.source}
                   </ReactMarkdown>
                 </MathJaxComponent>
