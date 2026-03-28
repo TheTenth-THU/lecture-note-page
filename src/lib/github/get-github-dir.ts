@@ -67,7 +67,7 @@ export default async function getGitHubDir(
     if (!res.ok) {
       const errorText = await res.text();
       console.error(
-        `Failed to fetch ${fileUrl}: \n拉取 ${fileUrl} 时发生错误:`,
+        `[getGitHubDir] Failed to fetch ${fileUrl}: \n拉取 ${fileUrl} 时发生错误：\n`,
         errorText,
       );
       return undefined;
@@ -76,7 +76,7 @@ export default async function getGitHubDir(
 
     if (!Array.isArray(contents)) {
       console.error(
-        "Expected an array response for directory contents, got: \n预期目录内容应该是一个数组，但实际返回了：",
+        `[getGitHubDir] Expected an array response for directory contents, got: \n预期目录内容应该是一个数组，但实际返回了：\n`,
         contents,
         "You might want to use `get-github-file` instead of `get-github-dir` for this path. \n你可能需要针对这个路径使用 `get-github-file` 而不是 `get-github-dir`。",
       );
@@ -108,7 +108,7 @@ export default async function getGitHubDir(
         );
         if (!dirRes.ok) {
           console.error(
-            `Failed to fetch directory ${path}: \n拉取目录 ${path} 时发生错误:`,
+            `[getGitHubDir] Failed to fetch directory ${path}: \n拉取目录 ${path} 时发生错误：\n`,
             await dirRes.text(),
           );
           return { results: [], indexFilePath: "" };
@@ -116,7 +116,7 @@ export default async function getGitHubDir(
         const dirContents = await dirRes.json();
         if (!Array.isArray(dirContents)) {
           console.error(
-            "Expected an array response for directory contents, got: \n预期目录内容应该是一个数组，但实际返回了：",
+            `[getGitHubDir] Expected an array response for directory contents, got: \n预期目录内容应该是一个数组，但实际返回了：\n`,
             dirContents,
           );
           return { results: [], indexFilePath: "" };
@@ -159,7 +159,10 @@ export default async function getGitHubDir(
         await recursiveFetch(directoryPath);
       // 如果找到了 index 文件，立即获取其 front matter 中的 longform.scenes 字段
       if (indexFilePath) {
-        console.log("Found index file at: \n找到索引文件于：", indexFilePath);
+        console.log(
+          "[getGitHubDir] Found index file at: \n找到索引文件于：\n",
+          indexFilePath,
+        );
         const indexRes = await fetch(
           `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${indexFilePath}`,
           fetchOptions,
@@ -178,7 +181,7 @@ export default async function getGitHubDir(
             Array.isArray(frontMatter.longform.scenes)
           ) {
             console.log(
-              "Index file front matter `longform.scenes`: \n索引文件 front matter 中的 `longform.scenes:`",
+              "[getGitHubDir] Index file front matter `longform.scenes`: \n索引文件 front matter 中的 `longform.scenes` 字段：\n",
               frontMatter.longform.scenes,
             );
             // 按照 scenes 顺序重新排序 allDetails
@@ -257,7 +260,7 @@ export default async function getGitHubDir(
               }
             }
             console.log(
-              "Reordered directory details based on scenes: \n根据 scenes 重新排序后的目录详情:",
+              "[getGitHubDir] Reordered directory details based on scenes: \n根据 scenes 重新排序后的目录详情：\n",
               newDetails,
             );
             return {
@@ -275,7 +278,7 @@ export default async function getGitHubDir(
     }
   } catch (error) {
     console.error(
-      "Error fetching file from GitHub:\n从 GitHub 获取文件时发生错误:",
+      "[getGitHubDir] Error fetching file from GitHub:\n从 GitHub 获取文件时发生错误：\n",
       error,
     );
     return undefined;

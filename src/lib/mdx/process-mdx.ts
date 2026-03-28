@@ -1,94 +1,8 @@
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 
 import matter from "gray-matter";
-import GithubSlugger from "github-slugger";
-
-// 引入插件
-import remarkGfm from "remark-gfm";
-import remarkMath from "remark-math";
-import remarkWikiLink from "remark-wiki-link";
-import remarkRuby from "@/lib/mdx/remark-ruby";
-import remarkMathToTex from "@/lib/mdx/remark-math-to-tex";
-
-import rehypeObsidianId from "@/lib/mdx/rehype-obsidian-id";
-import rehypeCallouts, {
-  type UserOptions as RehypeCalloutsOptions,
-} from "rehype-callouts";
-import rehypeSlug from "rehype-slug";
-import rehypeRaw from "rehype-raw";
-import rehypeMathToTex from "@/lib/mdx/rehype-math-to-tex";
-
-import calloutIcons from "@/app/ui/callout-icons";
-
-const rehypeCalloutOptions: RehypeCalloutsOptions = {
-  theme: "obsidian",
-  aliases: {
-    definition: ["def", "def."],
-    theorem: ["thm", "thm."],
-    lemma: ["lem"],
-    proof: ["pf"],
-  },
-  callouts: {
-    definition: {
-      title: "Definition",
-      indicator: calloutIcons.info,
-    },
-    theorem: {
-      title: "Theorem",
-      indicator: calloutIcons.tldr,
-    },
-    lemma: {
-      title: "Lemma",
-      indicator: calloutIcons.tldr,
-    },
-    proof: {
-      title: "Proof",
-      indicator: calloutIcons.info,
-    },
-  },
-};
-
-const slugger = new GithubSlugger();
-export const mdxSerializeOptions: any = {
-  parseFrontmatter: false,
-  mdxOptions: {
-    format: "md",
-    remarkPlugins: [
-      remarkGfm,
-      [
-        remarkWikiLink,
-        {
-          aliasDivider: "|",
-          pageResolver: (name: string) => [name],
-          hrefTemplate: (permalink: string) =>
-            `wiki://${slugger.slug(permalink)}`,
-        },
-      ],
-      remarkRuby,
-      remarkMath,
-      remarkMathToTex,
-    ],
-    rehypePlugins: [
-      [
-        rehypeRaw,
-        {
-          passThrough: [
-            "mdxJsxFlowElement",
-            "mdxJsxTextElement",
-            "mdxTextExpression",
-            "mdxFlowExpression",
-            "mdxjsEsm",
-          ],
-        },
-      ],
-      [rehypeCallouts, rehypeCalloutOptions],
-      rehypeSlug,
-      rehypeObsidianId,
-      // rehypeKatex,
-      rehypeMathToTex,
-    ],
-  },
-};
+import { mdxSerializeOptions } from "@/lib/mdx/mdx-options";
+import transformExtendedTableSyntax from "@/lib/mdx/transform-extended-table";
 
 export async function readPublicAssetText(assetPath: string): Promise<string> {
   const normalized = assetPath.startsWith("/") ? assetPath.slice(1) : assetPath;
@@ -98,18 +12,22 @@ export async function readPublicAssetText(assetPath: string): Promise<string> {
 
     const assets = env.ASSETS;
     if (!assets) {
-      throw new Error("Missing Cloudflare assets binding: env.ASSETS");
+      throw new Error(
+        "Missing Cloudflare assets binding: env.ASSETS\n缺少 Cloudflare 资源绑定：env.ASSETS",
+      );
     }
     const res = await assets.fetch(`https://assets.local/${normalized}`);
     if (!res.ok) {
-      throw new Error(`Asset not found: /${normalized} (${res.status})`);
+      throw new Error(
+        `Asset not found: /${normalized} (${res.status})\n资源未找到：/${normalized} (${res.status})`,
+      );
     }
     return await res.text();
   } catch (error) {
     // 在开发环境中尝试从本地文件系统读取
     if (process.env.NODE_ENV === "development") {
       console.info(
-        `Attempting to read local file for asset "/${normalized}" in development mode...`,
+        `[readPublicAssetText] Attempting to read local file for asset "/${normalized}" in development mode...\n正在开发环境中尝试读取本地文件资源 "/${normalized}"...`,
       );
       const fs = await import("fs/promises");
       const path = await import("path");
@@ -117,7 +35,10 @@ export async function readPublicAssetText(assetPath: string): Promise<string> {
       try {
         return await fs.readFile(localPath, "utf-8");
       } catch (fsError) {
-        console.error(`Error reading local file "${localPath}":`, fsError);
+        console.error(
+          `[readPublicAssetText] Error reading local file "${localPath}": \n无法读取本地文件 "${localPath}"：\n`,
+          fsError,
+        );
         throw fsError;
       }
     }
@@ -137,7 +58,10 @@ export async function getProjectDescription(filePath: string) {
   try {
     fileContents = await readPublicAssetText(`content/${filePath}`);
   } catch (error) {
-    console.warn(`Could not read file "content/${filePath}":`, error);
+    console.warn(
+      `[getProjectDescription] Could not read file "content/${filePath}": \n无法读取文件 "content/${filePath}"：\n`,
+      error,
+    );
     return undefined;
   }
   // 使用 gray-matter 解析 frontmatter
@@ -255,16 +179,21 @@ export default async function processMdx(
   // 序列化 MDX
   // 将 content 中的 `<br>` 替换为闭合的 `<br />`
   let processedContent = content.replace(/<br\s*\/?>/g, "<br />");
+  // 兼容 Obsidian table-extended 的 tx 与 -tx- 触发语法
+  processedContent = transformExtendedTableSyntax(processedContent);
   // 处理 Obsidian 图片链接 ![[path/to/image.png|alt text]]
   // 替换为标准的 markdown 图片链接 ![alt text](/path/to/image.png)
   processedContent = processedContent.replace(
     /!\[\[(.*?)(?:\|(.*?))?\]\]/g,
     (match, path: string, caption: string) => {
-      console.info("Processing Obsidian image link:", {
-        match,
-        path,
-        caption,
-      });
+      console.info(
+        "[processMdx] Processing Obsidian image link:\n正在处理 Obsidian 图片链接：\n",
+        {
+          match,
+          path,
+          caption,
+        },
+      );
       return path.startsWith("http") ?
           `![${caption || ""}](${path})`
         : `![${caption || ""}](wiki://${path})`;

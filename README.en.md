@@ -159,6 +159,47 @@ If a course contains index.md or index.mdx and its front matter defines longform
 
 ## Markdown And Extended Syntax
 
+### Extended Tables (tx / -tx-)
+
+The project supports two extended-table modes:
+
+- Standard markdown tables are parsed by `remark-extended-table`, with `^` (rowspan) and `>` (colspan).
+- `tx` and `-tx-` blocks are parsed with MultiMarkdown table syntax, supporting `^^` (rowspan), `||` (colspan), and multi-row headers.
+
+Inside `tx` / `-tx-` blocks, use:
+
+- `^^`: merge with the cell above (rowspan)
+- `||`: merge with the cell on the right (colspan)
+
+It also supports two Obsidian-style triggers:
+
+1. `tx` fenced code block
+
+````md
+```tx
+| Method | Applicability ||
+| ^^ | Efficient estimators (if any) | Non-efficient estimators |
+| :--- | :--- | :--- |
+| CRLB | Always solvable | Not applicable |
+| Linear model | Always solvable | Not applicable |
+| Sufficient statistics | Sometimes solvable | Sometimes solvable |
+```
+````
+
+2. Leading `-tx-` paragraph (loose mode)
+
+```md
+-tx-
+| Method | Applicability ||
+| ^^ | Efficient estimators (if any) | Non-efficient estimators |
+| :--- | :--- | :--- |
+| CRLB | Always solvable | Not applicable |
+| Linear model | Always solvable | Not applicable |
+| Sufficient statistics | Sometimes solvable | Sometimes solvable |
+```
+
+Note: `-tx-` must be on its own line; subsequent continuous table-like lines are parsed as MultiMarkdown tables.
+
 ### Math
 
 The project uses remark-math to preserve math nodes, then converts them back to TeX text so that MathJax 4 can render them on the client.

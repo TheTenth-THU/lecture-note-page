@@ -27,9 +27,7 @@ declare global {
       startup?: { promise?: Promise<void> };
       typesetClear?: (elements?: (HTMLElement | Document)[]) => void;
       typeset?: () => void;
-      typesetPromise?: (
-        elements?: (HTMLElement | Document)[],
-      ) => Promise<void>;
+      typesetPromise?: (elements?: (HTMLElement | Document)[]) => Promise<void>;
     };
   }
 }
@@ -94,7 +92,7 @@ export default function MathJaxLoader() {
       const errorMsg = event.reason?.message || event.reason?.toString() || "";
       if (errorMsg.includes("MathJax") || errorMsg.includes("Can't load")) {
         console.warn(
-          `MathJax internal dependency failed. Switching to jsDelivr fallback.`,
+          `[MathJaxLoader] MathJax internal dependency failed. Switching to jsDelivr fallback. \nMathJax 内部依赖加载失败，正在切换到 jsDelivr 备用方案。`,
           event.reason,
         );
         event.preventDefault();
@@ -156,11 +154,14 @@ export default function MathJaxLoader() {
     runtimeScript.onload = async () => {
       const mj = window.MathJax;
       if (!mj?.startup?.promise) {
-        console.error("[MathJaxLoader] MathJax startup promise is unavailable.", {
-          scriptSrc,
-          mathJaxFontName,
-          runtimeId,
-        });
+        console.error(
+          "[MathJaxLoader] MathJax startup promise is unavailable. \nMathJax 的启动承诺不可用。",
+          {
+            scriptSrc,
+            mathJaxFontName,
+            runtimeId,
+          },
+        );
         return;
       }
 
@@ -169,7 +170,7 @@ export default function MathJaxLoader() {
       } catch (error) {
         if (!cancelled && scriptSrc !== CDN_SCRIPT_SRC) {
           console.warn(
-            "[MathJaxLoader] MathJax startup failed. Switching to jsDelivr fallback.",
+            "[MathJaxLoader] MathJax startup failed. Switching to jsDelivr fallback. \n数学公式库启动失败，正在切换到 jsDelivr 备用方案。",
             error,
           );
           setScriptSrc(CDN_SCRIPT_SRC);
@@ -187,7 +188,7 @@ export default function MathJaxLoader() {
           detail: { fontName: mathJaxFontName, scriptSrc },
         }),
       );
-      console.debug("[MathJaxLoader] Runtime ready", {
+      console.debug("[MathJaxLoader] Runtime ready \n运行时准备就绪 \n", {
         scriptSrc,
         mathJaxFontName,
         runtimeId,
@@ -199,7 +200,7 @@ export default function MathJaxLoader() {
       }
 
       console.warn(
-        `MathJax load failed (${scriptSrc}). Switching to jsDelivr fallback.`,
+        `[MathJaxLoader] MathJax load failed (${scriptSrc}). Switching to jsDelivr fallback. \n数学公式库加载失败（${scriptSrc}），正在切换到 jsDelivr 备用方案。`,
       );
       if (scriptSrc !== CDN_SCRIPT_SRC) {
         setScriptSrc(CDN_SCRIPT_SRC);

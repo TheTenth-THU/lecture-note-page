@@ -61,14 +61,17 @@ export default function DocPage() {
             );
             if (!res.ok) {
               console.error(
-                `${semester} 获取失败：${res.status} ${res.statusText}`,
+                `[/:DocPage] Failed to get ${semester} \n${semester} 获取失败：\n${res.status} ${res.statusText}`,
               );
               return [semester, [] as GitHubDirectoryDetailTerm[]] as const;
             }
             const data: DocResponse = await res.json();
 
             if (data.type !== "DIR" || !Array.isArray(data.details)) {
-              console.error(`${semester} 返回结果不是目录`);
+              console.error(
+                `[/:DocPage] The returned data for ${semester} is not a directory \n${semester} 返回的数据不是一个目录：\n`,
+                data,
+              );
               return [semester, [] as GitHubDirectoryDetailTerm[]] as const;
             }
             const courses = (data.details || []).filter(

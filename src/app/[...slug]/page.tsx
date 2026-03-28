@@ -135,7 +135,7 @@ export default async function DocPage({ params }: PageParams) {
   ];
   if (!semester || !availableSemesters.includes(semester)) {
     console.error(
-      "Catch-all route requires at least 1 segment of path as `semester`, but got:\n路由至少需要一个路径段作为 `semester`，但实际解析到的参数为：",
+      "[/[...slug]:DocPage] Catch-all route requires at least 1 segment of path as `semester`, but got:\n路由至少需要一个路径段作为 `semester`，但实际解析到的参数为：\n",
       resolvedParams.slug,
     );
     notFound();
@@ -144,7 +144,9 @@ export default async function DocPage({ params }: PageParams) {
   const coursesDir = await getGitHubDir(semester, "/", false);
   const courses =
     coursesDir?.type === "DIR" && coursesDir.details ?
-      coursesDir.details.filter((item) => item.type === "dir")
+      coursesDir.details.filter(
+        (item) => item.type === "dir" && !item.name.startsWith("."),
+      )
     : [];
 
   // 获取当前课程的目录结构以供侧边栏使用

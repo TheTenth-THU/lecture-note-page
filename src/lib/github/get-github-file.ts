@@ -60,16 +60,19 @@ export default async function getGitHubFile(
     const res = await fetch(fileUrl, fetchOptions);
     if (!res.ok) {
       const errorText = await res.text();
-      console.error(`Failed to fetch ${fileUrl}:`, errorText);
+      console.error(
+        `[getGitHubFile] Failed to fetch ${fileUrl}: \n获取 ${fileUrl} 时出错：\n`,
+        errorText,
+      );
       return undefined;
     }
     const contents = await res.json();
 
     if (Array.isArray(contents)) {
       console.error(
-        `Expected a file response but got an array for ${fileUrl}:`,
+        `[getGitHubFile] Expected a file response but got an array for ${fileUrl}: \n获取 ${fileUrl} 时出错：\n`,
         contents,
-        "You might want to use `get-github-dir` instead of `get-github-file` for this path.",
+        "You might want to use `get-github-dir` instead of `get-github-file` for this path.\n你可能需要针对这个路径使用 `get-github-dir` 而不是 `get-github-file`。",
       );
       return undefined;
     }
@@ -99,7 +102,10 @@ export default async function getGitHubFile(
       };
     }
   } catch (error) {
-    console.error(`Error fetching file from GitHub:`, error);
+    console.error(
+      `[getGitHubFile] Error fetching file from GitHub: \n获取 GitHub 文件时出错：\n`,
+      error,
+    );
     return undefined;
   }
 }

@@ -17,7 +17,9 @@ export function ThemeSwitcher() {
             <Button
               key={m}
               onClick={() => {
-                console.log(`Switching theme mode to ${m}`);
+                console.debug(
+                  `[ThemeSwitcher] Switching theme mode to ${m} \n正在切换主题模式到 ${m}`,
+                );
                 setMode(m as any);
               }}
               isCurrent={mode === m}>
@@ -39,7 +41,9 @@ export function ThemeSwitcher() {
             <Button
               key={f}
               onClick={() => {
-                console.log(`Switching font to ${f}`);
+                console.debug(
+                  `[ThemeSwitcher] Switching font to ${f} \n正在切换字体到 ${f}`,
+                );
                 setFont(f as any);
               }}
               style={{
@@ -60,7 +64,9 @@ export function ThemeSwitcher() {
             <Button
               key={c}
               onClick={() => {
-                console.log(`Switching color to ${c}`);
+                console.debug(
+                  `[ThemeSwitcher] Switching color to ${c} \n正在切换主题颜色到 ${c}`,
+                );
                 setColor(c as any);
               }}
               isCurrent={color === c}

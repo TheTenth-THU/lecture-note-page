@@ -60,7 +60,10 @@ export async function GET(request: NextRequest) {
 
   if (!res.ok) {
     const errorText = await res.text();
-    console.error(`Failed to fetch asset ${fileUrl}:`, errorText);
+    console.error(
+      `[/api/get-asset] Failed to fetch asset ${fileUrl}: \n拉取资源 ${fileUrl} 失败: \n`,
+      errorText,
+    );
     return NextResponse.json(
       { error: "File not found or failed to fetch" },
       { status: res.status },

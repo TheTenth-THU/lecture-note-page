@@ -21,12 +21,10 @@ declare global {
       tex?: {
         macros?: Record<string, string | [string, number]>;
       };
-       startup?: { promise?: Promise<void> };
+      startup?: { promise?: Promise<void> };
       typesetClear?: (elements?: (HTMLElement | Document)[]) => void;
-       typeset?: () => void;
-      typesetPromise?: (
-        elements?: (HTMLElement | Document)[],
-      ) => Promise<void>;
+      typeset?: () => void;
+      typesetPromise?: (elements?: (HTMLElement | Document)[]) => Promise<void>;
     };
   }
 }
@@ -88,11 +86,14 @@ export default function MathJaxComponent({
 
       const mj = window.MathJax;
       if (!mj) {
-        console.error("[MathJaxComponent] MathJax is not loaded.", {
-          fontName,
-          renderKey,
-          activeFont: window.__activeMathJaxFont__,
-        });
+        console.error(
+          "[MathJaxComponent] MathJax is not loaded. \nMathJax 未加载。\n",
+          {
+            fontName,
+            renderKey,
+            activeFont: window.__activeMathJaxFont__,
+          },
+        );
         return;
       }
 
@@ -103,17 +104,24 @@ export default function MathJaxComponent({
       // 检查 MathJax 和 typesetPromise 是否存在
       if (mj && mj.typesetPromise) {
         try {
-          console.debug("[MathJaxComponent] Typesetting", {
-            fontName,
-            renderKey,
-            activeFont: window.__activeMathJaxFont__,
-          });
+          console.debug(
+            "[MathJaxComponent] Typesetting... \nMathJax 排版中... \n",
+            {
+              fontName,
+              renderKey,
+              activeFont: window.__activeMathJaxFont__,
+            },
+          );
           if (typeof mj.typesetClear === "function") {
             mj.typesetClear([container]);
           }
           await mj.typesetPromise([container]);
         } catch (error) {
-          if (!cancelled) console.error("MathJax typesetting error:", error);
+          if (!cancelled)
+            console.error(
+              "[MathJaxComponent] MathJax typesetting error: \nMathJax 排版错误：\n",
+              error,
+            );
         }
       }
     };

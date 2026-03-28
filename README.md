@@ -36,18 +36,18 @@ lecture-note-page 是一个部署在 Cloudflare 上的课程笔记站点。它�
 ### 页面入口
 
 - 首页 [src/app/page.tsx](src/app/page.tsx)
-	展示学期列表和课程入口。当前学期集合写死在前端代码里，不是自动发现。
+  展示学期列表和课程入口。当前学期集合写死在前端代码里，不是自动发现。
 - 文档页 [src/app/[...slug]/page.tsx](src/app/%5B...slug%5D/page.tsx)
-	路由格式是 semester/course/doc-path，用于拉取课程目录结构和具体文档内容。
+  路由格式是 semester/course/doc-path，用于拉取课程目录结构和具体文档内容。
 
 ### API 路由
 
 - [src/app/api/get-doc/route.ts](src/app/api/get-doc/route.ts)
-	从 GitHub Contents API 获取目录或文件内容。目录请求可递归展开，Markdown/MDX 会经过 remark 和 rehype 处理后返回序列化结果，非 Markdown 文件则返回资源代理地址。
+  从 GitHub Contents API 获取目录或文件内容。目录请求可递归展开，Markdown/MDX 会经过 remark 和 rehype 处理后返回序列化结果，非 Markdown 文件则返回资源代理地址。
 - [src/app/api/get-asset/route.ts](src/app/api/get-asset/route.ts)
-	代理图片、PDF 等附件资源，并根据文件名推断 Content-Type。
+  代理图片、PDF 等附件资源，并根据文件名推断 Content-Type。
 - [src/app/api/render-tikz/route.ts](src/app/api/render-tikz/route.ts)
-	接收 TikZ 源码，预处理后转发到外部渲染服务，返回图片地址和尺寸信息。
+  接收 TikZ 源码，预处理后转发到外部渲染服务，返回图片地址和尺寸信息。
 
 ### 当前默认数据约定
 
@@ -158,6 +158,47 @@ fork 后你通常需要改：
 如果课程目录中存在 index.md 或 index.mdx，且 front matter 里定义了 longform.scenes，服务端会按照该顺序重排场景文件。这适合长篇讲义或分场景讲稿。
 
 ## Markdown 与扩展语法
+
+### 扩展表格（tx / -tx-）
+
+项目支持两套扩展表格语法：
+
+- 普通 Markdown 表格：由 `remark-extended-table` 解析，支持 `^`（向上合并）与 `>`（向右合并）。
+- `tx` 与 `-tx-` 触发块：按 MultiMarkdown 语法解析，支持 `^^`（向上合并）与 `||`（向右合并）以及多行表头。
+
+`tx` / `-tx-` 触发块可使用如下语法：
+
+- `^^`：与上方单元格合并（rowspan）
+- `||`：与右侧单元格合并（colspan）
+
+同时兼容两种 Obsidian 风格触发方式：
+
+1. `tx` 代码块
+
+````md
+```tx
+| 方法 | 适用情况 ||
+| ^^ | 有效估计量（若存在） | 非有效估计量 |
+| :--- | :--- | :--- |
+| CRLB | 一定可求解 | 不适用 |
+| 线性模型 | 一定可求解 | 不适用 |
+| 充分统计量 | 可能可求解 | 可能可求解 |
+```
+````
+
+2. 前置 `-tx-` 段落（宽松模式）
+
+```md
+-tx-
+| 方法 | 适用情况 ||
+| ^^ | 有效估计量（若存在） | 非有效估计量 |
+| :--- | :--- | :--- |
+| CRLB | 一定可求解 | 不适用 |
+| 线性模型 | 一定可求解 | 不适用 |
+| 充分统计量 | 可能可求解 | 可能可求解 |
+```
+
+说明：`-tx-` 需要独立一行；其后的连续表格段会被按 MultiMarkdown 表格解析。
 
 ### 数学公式
 

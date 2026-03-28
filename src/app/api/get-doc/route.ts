@@ -1,25 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import matter from "gray-matter";
 import { serialize } from "next-mdx-remote/serialize";
-import { visit } from "unist-util-visit";
-
-import remarkGfm from "remark-gfm";
-import remarkMath from "remark-math";
-import remarkWikiLink from "remark-wiki-link";
-import remarkRuby from "@/lib/mdx/remark-ruby";
-import remarkMathToTex from "@/lib/mdx/remark-math-to-tex";
-
-import rehypeObsidianId from "@/lib/mdx/rehype-obsidian-id";
-import rehypeCallouts, {
-  type UserOptions as RehypeCalloutsOptions,
-} from "rehype-callouts";
-import rehypeSlug from "rehype-slug";
-import rehypeRaw from "rehype-raw";
-import rehypeMathToTex from "@/lib/mdx/rehype-math-to-tex";
-
-import GithubSlugger from "github-slugger";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
-import calloutIcons from "@/app/ui/callout-icons";
+import { mdxSerializeOptions } from "@/lib/mdx/mdx-options";
+import transformExtendedTableSyntax from "@/lib/mdx/transform-extended-table";
 
 interface GitHubFileResponse {
   type: string;
@@ -35,57 +19,6 @@ interface GitHubDirectoryDetailTerm {
   path: string;
   children?: GitHubDirectoryDetailTerm[];
 }
-
-/**
- * Markdown 解析调试插件
- * 将 AST 树打印到控制台，方便调试使用
- * @returns {function} Remark 插件函数
- */
-const debugPlugin = () => {
-  return (tree: any) => {
-    console.log("--- AST DEBUG START ---");
-
-    // 打印整个树结构（注意：树可能很大，建议只打印部分或使用 JSON.stringify）
-    console.log(JSON.stringify(tree, null, 2));
-
-    // // 或者只查看特定类型的节点，例如查看所有的数学公式节点
-    // visit(tree, (node) => {
-    //   if (node.type === "math" || node.type === "inlineMath") {
-    //     console.log("Found math node:", node);
-    //   }
-    // });
-
-    console.log("--- AST DEBUG END ---");
-  };
-};
-
-const rehypeCalloutOptions: RehypeCalloutsOptions = {
-  theme: "obsidian",
-  aliases: {
-    definition: ["def", "def."],
-    theorem: ["thm", "thm."],
-    lemma: ["lem"],
-    proof: ["pf"],
-  },
-  callouts: {
-    definition: {
-      title: "Definition",
-      indicator: calloutIcons.info,
-    },
-    theorem: {
-      title: "Theorem",
-      indicator: calloutIcons.tldr,
-    },
-    lemma: {
-      title: "Lemma",
-      indicator: calloutIcons.tldr,
-    },
-    proof: {
-      title: "Proof",
-      indicator: calloutIcons.info,
-    },
-  },
-};
 
 export async function GET(request: NextRequest) {
   // 从环境变量中获取 GitHub 仓库信息
@@ -382,6 +315,8 @@ export async function GET(request: NextRequest) {
     console.log("Serializing MDX content for page:", page);
     // 将 content 中的 `<br>` 替换为闭合的 `<br />`，避免 MDX 解析问题
     let processedContent = content.replace(/<br\s*\/?>/g, "<br />");
+    // 兼容 Obsidian table-extended 的 tx 与 -tx- 触发语法
+    processedContent = transformExtendedTableSyntax(processedContent);
     // 处理 Obsidian 图片链接 ![[path/to/image.png|alt text]]
     // 替换为标准的 markdown 图片链接 ![alt text](wiki://path/to/image.png)
     processedContent = processedContent.replace(
@@ -389,48 +324,8 @@ export async function GET(request: NextRequest) {
       (match, path, caption) => `![${caption || ""}](wiki://${path})`,
     );
 
-    const slugger = new GithubSlugger();
     const mdxSource = await serialize(processedContent, {
-      mdxOptions: {
-        format: "md",
-        remarkPlugins: [
-          remarkGfm,
-          [
-            remarkWikiLink,
-            {
-              aliasDivider: "|",
-              pageResolver: (name: string) => [name],
-              hrefTemplate: (permalink: string) =>
-                `wiki://${slugger.slug(permalink)}`,
-            },
-          ],
-          remarkRuby,
-          remarkMath,
-          remarkMathToTex,
-          // debugPlugin,
-          // remarkObsidian,
-        ],
-        rehypePlugins: [
-          [
-            rehypeRaw,
-            {
-              passThrough: [
-                "mdxJsxFlowElement",
-                "mdxJsxTextElement",
-                "mdxTextExpression",
-                "mdxFlowExpression",
-                "mdxjsEsm",
-              ],
-            },
-          ],
-          [rehypeCallouts, rehypeCalloutOptions],
-          rehypeSlug,
-          rehypeObsidianId,
-          // rehypeKatex,
-          rehypeMathToTex,
-        ],
-      },
-      parseFrontmatter: false,
+      ...mdxSerializeOptions,
     });
     console.log("MDX serialization complete for page:", page);
 

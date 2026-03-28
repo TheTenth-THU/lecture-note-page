@@ -14,6 +14,7 @@ import MathJaxComponent from "@/components/mathjax-component";
 import TikzBlock from "@/components/tikz-block";
 import { useTheme } from "@/contexts/theme-context";
 import { firaCode } from "@/app/ui/fonts";
+import { mdxSerializeOptions } from "@/lib/mdx/mdx-options";
 
 import {
   FolderOpenIcon,
@@ -118,7 +119,7 @@ function CourseDropdown({
       <select
         value={currentCourse || ""}
         onChange={(e) => onSelect(e.target.value)}
-        className="border-primary-b50 bg-primary-b50 focus:border-primary-f50 focus:ring-primary-f50 w-full rounded-md border px-3 py-2 shadow-sm focus:ring-1 focus:outline-none">
+        className="bg-mixed-25 focus:bg-primary-b25 w-full rounded-md px-3 py-2 shadow-sm focus:outline-none">
         <option value="" disabled className="text-sm italic">
           选择课程 / Select a course
         </option>
@@ -160,7 +161,7 @@ function RecursiveDirectoryList({
 }) {
   return (
     <ul
-      className="space-y-0.5 border-l border-gray-200 dark:border-gray-700"
+      className="border-mixed-75 space-y-0.5 border-l"
       style={{ marginLeft: leftMargin }}>
       {items.map((item, index) => (
         <li key={`${item.path}:${index}`}>
@@ -210,92 +211,61 @@ function RecursiveDirectoryList({
   );
 }
 
-// 引入插件
-import remarkGfm from "remark-gfm";
-import remarkMath from "remark-math";
-import remarkWikiLink from "remark-wiki-link";
-import remarkRuby from "@/lib/mdx/remark-ruby";
-import remarkMathToTex from "@/lib/mdx/remark-math-to-tex";
-
-import rehypeObsidianId from "@/lib/mdx/rehype-obsidian-id";
-import rehypeCallouts, {
-  type UserOptions as RehypeCalloutsOptions,
-} from "rehype-callouts";
-import rehypeSlug from "rehype-slug";
-import rehypeRaw from "rehype-raw";
-import rehypeMathToTex from "@/lib/mdx/rehype-math-to-tex";
-
+import TocSidebar from "@/components/toc-sidebar";
 import GithubSlugger from "github-slugger";
-import calloutIcons from "@/app/ui/callout-icons";
 
-const rehypeCalloutOptions: RehypeCalloutsOptions = {
-  theme: "obsidian",
-  aliases: {
-    definition: ["def", "def."],
-    theorem: ["thm", "thm."],
-    lemma: ["lem"],
-    proof: ["pf"],
-  },
-  callouts: {
-    definition: {
-      title: "Definition",
-      indicator: calloutIcons.info,
-    },
-    theorem: {
-      title: "Theorem",
-      indicator: calloutIcons.tldr,
-    },
-    lemma: {
-      title: "Lemma",
-      indicator: calloutIcons.tldr,
-    },
-    proof: {
-      title: "Proof",
-      indicator: calloutIcons.info,
-    },
-  },
+type TocItem = {
+  id: string;
+  text: string;
+  level: 2 | 3;
 };
 
-const slugger = new GithubSlugger();
-export const mdxSerializeOptions: any = {
-  parseFrontmatter: false,
-  mdxOptions: {
-    format: "md",
-    remarkPlugins: [
-      remarkGfm,
-      [
-        remarkWikiLink,
-        {
-          aliasDivider: "|",
-          pageResolver: (name: string) => [name],
-          hrefTemplate: (permalink: string) =>
-            `wiki://${slugger.slug(permalink)}`,
-        },
-      ],
-      remarkRuby,
-      remarkMath,
-      remarkMathToTex,
-    ],
-    rehypePlugins: [
-      [
-        rehypeRaw,
-        {
-          passThrough: [
-            "mdxJsxFlowElement",
-            "mdxJsxTextElement",
-            "mdxTextExpression",
-            "mdxFlowExpression",
-            "mdxjsEsm",
-          ],
-        },
-      ],
-      [rehypeCallouts, rehypeCalloutOptions],
-      rehypeSlug,
-      rehypeObsidianId,
-      rehypeMathToTex,
-    ],
-  },
-};
+function normalizeHeadingText(raw: string) {
+  return (
+    raw
+      .replace(/!\[([^\]]*)\]\([^)]*\)/g, "$1")
+      .replace(/\[([^\]]+)\]\([^)]*\)/g, "$1")
+      .replace(/`([^`]+)`/g, "$1")
+      .replace(/[*_~]/g, "")
+      // 关键：不要把 <br/> 强制替换成单空格；直接去掉标签本体即可
+      .replace(/<br\s*\/?>/gi, "")
+      .replace(/<[^>]*>/g, "")
+      .replace(/\\([\\`*_{}\[\]()#+\-.!])/g, "$1")
+      // 关键：不要再合并连续空白
+      .trim()
+  );
+}
+
+function extractH2TocItems(source: string): TocItem[] {
+  const slugger = new GithubSlugger();
+  const items: TocItem[] = [];
+
+  for (const line of source.split("\n")) {
+    const match = line.match(/^(#{1,6})\s+(.+?)\s*#*\s*$/);
+    if (!match) {
+      continue;
+    }
+
+    const level = match[1].length;
+    const text = normalizeHeadingText(match[2]);
+    if (!text) {
+      continue;
+    }
+
+    const id = slugger.slug(text);
+    if (level !== 2 && level !== 3) {
+      continue;
+    }
+
+    items.push({
+      id,
+      text,
+      level,
+    });
+  }
+
+  return items;
+}
 
 /**
  * 根据 URL 参数解析学期、课程和文档路径，并从 GitHub 获取对应的文档内容进行渲染
@@ -434,34 +404,43 @@ export default function DocClient({
     }
 
     if (doc.kind === "mdx") {
+      const tocItems = extractH2TocItems(doc.source);
+      const tocTitle = "本页内容";
+
       return (
-        <div key={fullPath}>
-          <article className="prose dark:prose-invert lg:prose-xl">
-            <components.h1>
-              <p className="text-lg">{currentCourse}</p>
-              {doc.title?.replace(/\.mdx?$/, "")}
-            </components.h1>
-            <div className="mathjax-wrapper-isolation">
-              <MathJaxComponent
-                fontName={mathJaxFontName}
-                key={`${fullPath}:${mathJaxFontName}`}
-                renderKey={`${fullPath}:${mathJaxFontName}`}>
-                <ReactMarkdown
-                  remarkPlugins={mdxSerializeOptions.mdxOptions.remarkPlugins}
-                  rehypePlugins={mdxSerializeOptions.mdxOptions.rehypePlugins}
-                  components={overrideComponents as any}>
-                  {doc.source}
-                </ReactMarkdown>
-              </MathJaxComponent>
-            </div>
-          </article>
+        <div key={fullPath} className="max-w-7xl">
+          <div className="grid grid-cols-1 gap-8 lg:grid-cols-[220px_minmax(0,1fr)] lg:gap-12">
+            <TocSidebar title={tocTitle} items={tocItems} />
+            <article className="max-w-5xl min-w-0">
+              <components.h1>
+                <p className="mb-1 text-lg">
+                  <AcademicCapIcon className="mr-1 inline h-6 w-5 pb-1" />
+                  {currentCourse}
+                </p>
+                {doc.title?.replace(/\.mdx?$/, "")}
+              </components.h1>
+              <div className="mathjax-wrapper-isolation">
+                <MathJaxComponent
+                  fontName={mathJaxFontName}
+                  key={`${fullPath}:${mathJaxFontName}`}
+                  renderKey={`${fullPath}:${mathJaxFontName}`}>
+                  <ReactMarkdown
+                    remarkPlugins={mdxSerializeOptions.mdxOptions.remarkPlugins}
+                    rehypePlugins={mdxSerializeOptions.mdxOptions.rehypePlugins}
+                    components={overrideComponents as any}>
+                    {doc.source}
+                  </ReactMarkdown>
+                </MathJaxComponent>
+              </div>
+            </article>
+          </div>
         </div>
       );
     }
 
     if (doc.kind === "pdf") {
       return (
-        <div key={fullPath} className="my-8">
+        <div key={fullPath} className="my-8 max-w-5xl">
           <article className="prose dark:prose-invert lg:prose-xl">
             <components.h1>{doc.title}</components.h1>
             <iframe
@@ -478,7 +457,7 @@ export default function DocClient({
 
     if (doc.kind === "image") {
       return (
-        <div key={fullPath} className="my-8">
+        <div key={fullPath} className="my-8 max-w-5xl">
           <article className="prose dark:prose-invert lg:prose-xl">
             <components.h1>{doc.title}</components.h1>
             <Image
@@ -501,21 +480,19 @@ export default function DocClient({
   return (
     <div className="min-h-screen">
       <aside
-        className={` ${isSidebarOpen ? "w-72 border-r" : "w-0"} fixed left-0 z-40 shrink-0 overflow-hidden border-gray-200 bg-[#fbdfffd0] transition-all duration-300 ease-in-out dark:border-gray-400 dark:bg-[#0d010fD0] ${
+        className={` ${isSidebarOpen ? "w-72 border-r" : "w-0"} border-mixed-50 bg-mixed-10/80 fixed left-0 z-40 shrink-0 overflow-hidden transition-all duration-300 ease-in-out ${
           isShrunk ?
             "top-32 h-[calc(100vh-128px)]"
           : "top-56 h-[calc(100vh-224px)]"
         }`}>
         <div className="scrollbar-thin h-full w-72 overflow-y-auto p-6">
           <div className="mb-6 flex items-center justify-between">
-            <h2 className="text-xl font-bold text-gray-700 dark:text-gray-200">
-              Contents
-            </h2>
+            <h2 className="text-mixed-75 text-xl font-bold">Contents</h2>
             <button
               onClick={() => setIsSidebarOpen(false)}
-              className="rounded-md bg-[#1e293944] p-2 transition-colors hover:bg-purple-200 hover:text-[#660974] hover:dark:bg-[#41044a] hover:dark:text-purple-200"
+              className="bg-mixed-25 hover:bg-primary-f75 rounded-md p-2 transition-colors"
               title="收起">
-              <ChevronLeftIcon className="h-5 w-5 text-gray-500" />
+              <ChevronLeftIcon className="text-mixed-50 h-5 w-5" />
             </button>
           </div>
 
@@ -534,12 +511,12 @@ export default function DocClient({
         </div>
       </aside>
 
-      <main className="relative mx-auto max-w-4xl min-w-0 content-center px-14 md:px-28">
+      <main className="relative mx-auto min-w-0 content-center px-14 md:px-28">
         <button
           onClick={() => setIsSidebarOpen(true)}
           className={`fixed left-4 ${
             isShrunk ? "top-36" : "top-60"
-          } rounded-md border border-gray-400 bg-[#1e293944] p-2 transition-all duration-300 ease-in-out hover:bg-purple-200 hover:text-[#660974] hover:dark:bg-[#41044a] hover:dark:text-purple-200 ${isSidebarOpen ? "-z-50 opacity-0" : "z-50 opacity-100"} `}
+          } bg-mixed-25 hover:bg-primary-f75 border-mixed-50 rounded-md border p-2 transition-all duration-300 ease-in-out ${isSidebarOpen ? "-z-50 opacity-0" : "z-50 opacity-100"} `}
           title="展开">
           <Bars3Icon className="h-5 w-5" />
         </button>
