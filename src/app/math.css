@@ -1,21 +1,28 @@
 mjx-mstyle[style="border: 1.5px solid;"] {
-    background-color: var(--color-secondary-b25);
-    border-radius: 5px;
-    border: 1.5px solid var(--color-secondary-f50) !important;
-    color: var(--color-secondary-f50);
+  background-color: var(--color-secondary-b25);
+  border-radius: 5px;
+  border: 1.5px solid var(--color-secondary-f50) !important;
+  color: var(--color-secondary-f50);
 }
 
 mjx-mstyle[style="border: 1.5px solid;"] > mjx-mpadded > mjx-block {
-    width: auto !important;
-    padding-right: 1em;
+  width: auto !important;
+  padding-right: 1em;
 }
 
-div.math-block mjx-mstyle:first-child[style="border: 1.5px solid;"] > mjx-mpadded > mjx-block {
-    width: auto !important;
-    padding-left: 1em;
-    padding-right: 2em;
+div.math-block
+  mjx-mstyle:first-child[style="border: 1.5px solid;"]
+  > mjx-mpadded
+  > mjx-block {
+  width: auto !important;
+  padding-left: 1em;
+  padding-right: 2em;
 }
 
 mjx-utext {
-    font-family: var(--font-body) !important;
+  font-family: var(--font-body) !important;
+}
+
+mjx-mi[data-semantic-speech-none="bold script r"] mjx-utext {
+  padding-top: 0.232em !important;
 }

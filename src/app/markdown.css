@@ -8,7 +8,8 @@
   border-radius: 0.9rem;
   padding: 0.95rem 1rem 1rem 1.1rem;
   mix-blend-mode: normal;
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--foreground) 8%, transparent);
+  box-shadow: inset 0 0 0 1px
+    color-mix(in srgb, var(--foreground) 8%, transparent);
   line-height: 1.55;
 }
 
@@ -145,7 +146,11 @@ rt {
   border-radius: 1rem;
   overflow: hidden;
   background:
-    radial-gradient(circle at top left, color-mix(in srgb, var(--foreground) 7%, transparent), transparent 38%),
+    radial-gradient(
+      circle at top left,
+      color-mix(in srgb, var(--foreground) 7%, transparent),
+      transparent 38%
+    ),
     color-mix(in srgb, var(--background) 92%, var(--foreground) 3%);
 }
 
@@ -162,7 +167,8 @@ rt {
   overflow-x: auto;
   padding: 1rem;
   scrollbar-width: thin;
-  scrollbar-color: color-mix(in srgb, var(--foreground) 24%, transparent) transparent;
+  scrollbar-color: color-mix(in srgb, var(--foreground) 24%, transparent)
+    transparent;
 }
 
 .tikz-block__canvas::-webkit-scrollbar {
@@ -230,10 +236,4 @@ rt {
   overflow-x: auto;
   padding: 0 1rem 1rem;
   font-size: 0.9rem;
-}
-
-/* --- KaTeX Styles --- */
-
-.katex .katex-html {
-    display: none;
 }
