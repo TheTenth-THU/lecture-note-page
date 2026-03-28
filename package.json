@@ -16,7 +16,7 @@
 	},
 	"dependencies": {
 		"@heroicons/react": "^2.2.0",
-		"@opennextjs/cloudflare": "^1.14.2",
+		"@opennextjs/cloudflare": "1.18.0",
 		"clsx": "^2.1.1",
 		"github-slugger": "^2.0.0",
 		"gray-matter": "^4.0.3",
@@ -45,7 +45,6 @@
 		"@types/react-dom": "^19",
 		"eslint": "^9",
 		"eslint-config-next": "15.4.6",
-		"opennextjs-cloudflare": "^1.0.0",
 		"prettier": "^3.7.4",
 		"prettier-plugin-tailwindcss": "^0.7.2",
 		"tailwindcss": "^4",

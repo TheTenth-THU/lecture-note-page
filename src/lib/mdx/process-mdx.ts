@@ -186,17 +186,20 @@ export default async function processMdx(
   processedContent = processedContent.replace(
     /!\[\[(.*?)(?:\|(.*?))?\]\]/g,
     (match, path: string, caption: string) => {
+      const replaced =
+        path.startsWith("http") ?
+          `![${caption || ""}](${path})`
+        : `![${caption || ""}](wiki://${path})`;
       console.info(
         "[processMdx] Processing Obsidian image link:\n正在处理 Obsidian 图片链接：\n",
         {
           match,
           path,
           caption,
+          replaced,
         },
       );
-      return path.startsWith("http") ?
-          `![${caption || ""}](${path})`
-        : `![${caption || ""}](wiki://${path})`;
+      return replaced;
     },
   );
   return {

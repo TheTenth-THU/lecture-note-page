@@ -28,6 +28,11 @@ type DocResponse =
       options?: any;
     }
   | {
+      kind: "text";
+      title: string;
+      content: string;
+    }
+  | {
       kind: "pdf" | "image" | "other";
       title: string;
       url: string;
@@ -193,6 +198,12 @@ export default async function DocPage({ params }: PageParams) {
         kind: "mdx",
         title: frontmatter.title || fileData.fileName,
         source,
+      };
+    } else if ("contentDecoded" in fileData) {
+      doc = {
+        kind: "text",
+        title: fileData.fileName,
+        content: fileData.contentDecoded,
       };
     } else {
       doc = {

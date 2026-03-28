@@ -3,7 +3,7 @@
 import { Children, isValidElement, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { MDXComponents } from "mdx/types";
-import ReactMarkdown from "react-markdown";
+import ReactMarkdown, { defaultUrlTransform } from "react-markdown";
 
 import Image from "next/image";
 import clsx from "clsx";
@@ -37,6 +37,11 @@ export type DocResponse =
       title: string;
       source: string;
       options?: any;
+    }
+  | {
+      kind: "text";
+      title: string;
+      content: string;
     }
   | {
       kind: "pdf" | "image" | "other";
@@ -309,6 +314,13 @@ export default function DocClient({
     };
   }, []);
 
+  const mdUrlTransform = (url: string) => {
+    if (url.startsWith("wiki://")) {
+      return url;
+    }
+    return defaultUrlTransform(url);
+  };
+
   // 定义 MDX 组件的覆盖版本，针对特定元素（如 pre、code、a、img）进行自定义渲染以支持特殊功能
   const overrideComponents: MDXComponents = {
     ...components,
@@ -366,6 +378,11 @@ export default function DocClient({
         finalHref = href.replace("wiki://", `/${semester}/${prefix}`);
       }
       finalHref = finalHref.replace(/_/g, " ");
+      console.debug(
+        "[DocClient::overrideComponents] Processing link:\n正在处理链接：\n",
+        { href, finalHref },
+      );
+
       return (
         <InlineLink href={finalHref} {...props}>
           {children}
@@ -373,6 +390,10 @@ export default function DocClient({
       );
     },
     img: ({ alt, src, ...props }) => {
+      console.debug(
+        "[DocClient::overrideComponents] Processing image with src:\n正在处理图片，`src` 字段为：\n",
+        src,
+      );
       let finalSrc = src || "";
       if (src && src.startsWith("wiki://")) {
         const filename = src.replace("wiki://", "");
@@ -408,7 +429,7 @@ export default function DocClient({
       const tocTitle = "本页内容";
 
       return (
-        <div key={fullPath} className="max-w-7xl">
+        <div key={fullPath} className="mx-auto max-w-7xl px-10 md:px-20">
           <div className="grid grid-cols-1 gap-8 lg:grid-cols-[220px_minmax(0,1fr)] lg:gap-12">
             <TocSidebar title={tocTitle} items={tocItems} />
             <article className="max-w-5xl min-w-0">
@@ -425,6 +446,7 @@ export default function DocClient({
                   key={`${fullPath}:${mathJaxFontName}`}
                   renderKey={`${fullPath}:${mathJaxFontName}`}>
                   <ReactMarkdown
+                    urlTransform={mdUrlTransform}
                     remarkPlugins={mdxSerializeOptions.mdxOptions.remarkPlugins}
                     rehypePlugins={mdxSerializeOptions.mdxOptions.rehypePlugins}
                     components={overrideComponents as any}>
@@ -440,7 +462,7 @@ export default function DocClient({
 
     if (doc.kind === "pdf") {
       return (
-        <div key={fullPath} className="my-8 max-w-5xl">
+        <div key={fullPath} className="mx-auto my-8 max-w-5xl">
           <article className="prose dark:prose-invert lg:prose-xl">
             <components.h1>{doc.title}</components.h1>
             <iframe
@@ -457,7 +479,7 @@ export default function DocClient({
 
     if (doc.kind === "image") {
       return (
-        <div key={fullPath} className="my-8 max-w-5xl">
+        <div key={fullPath} className="mx-auto my-8 max-w-5xl">
           <article className="prose dark:prose-invert lg:prose-xl">
             <components.h1>{doc.title}</components.h1>
             <Image
@@ -474,7 +496,9 @@ export default function DocClient({
       );
     }
 
-    return <div className="text-gray-500">Unsupported document type.</div>;
+    return (
+      <div className="mx-auto text-gray-500">Unsupported document type.</div>
+    );
   };
 
   return (
@@ -511,7 +535,7 @@ export default function DocClient({
         </div>
       </aside>
 
-      <main className="relative mx-auto min-w-0 content-center px-14 md:px-28">
+      <main className="relative min-w-0">
         <button
           onClick={() => setIsSidebarOpen(true)}
           className={`fixed left-4 ${
@@ -520,8 +544,7 @@ export default function DocClient({
           title="展开">
           <Bars3Icon className="h-5 w-5" />
         </button>
-
-        {renderMessageOrContent()}
+        <div className="mx-auto mt-10 w-full">{renderMessageOrContent()}</div>
       </main>
     </div>
   );

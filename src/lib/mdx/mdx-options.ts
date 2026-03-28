@@ -44,8 +44,6 @@ const rehypeCalloutOptions: RehypeCalloutsOptions = {
   },
 };
 
-const slugger = new GithubSlugger();
-
 export const mdxSerializeOptions: any = {
   parseFrontmatter: false,
   mdxOptions: {
@@ -58,8 +56,23 @@ export const mdxSerializeOptions: any = {
         {
           aliasDivider: "|",
           pageResolver: (name: string) => [name],
-          hrefTemplate: (permalink: string) =>
-            `wiki://${slugger.slug(permalink)}`,
+          hrefTemplate: (permalink: string) => {
+            // 分割 permalink，形如：
+            // - "Page"
+            // - "Page#Heading" | "#Heading"
+            // - "Page#^Id" | "#^Id"
+            const [page, rest] = permalink.split("#");
+            const [heading, id] =
+              rest ? rest.split("^") : [undefined, undefined];
+            const headingSlug =
+              heading ? new GithubSlugger().slug(heading) : "";
+            return (
+              rest ?
+                id ? `wiki://${page}#${headingSlug}^${id}`
+                : `wiki://${page}#${headingSlug}`
+              : `wiki://${page}`
+            );
+          },
         },
       ],
       remarkRuby,
