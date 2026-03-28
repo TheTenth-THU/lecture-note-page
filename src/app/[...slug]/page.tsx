@@ -1,670 +1,214 @@
-"use client";
-
-import { Children, isValidElement, useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
-
-import { MDXComponents } from "mdx/types";
-// import { MDXRemote } from "next-mdx-remote/rsc";
-import { MDXRemote, MDXRemoteSerializeResult } from "next-mdx-remote";
-import { components } from "@/components/mdx-components";
-
-// import remarkGfm from "remark-gfm";
-// import remarkMath from "remark-math";
-// import remarkObsidianCallout from "remark-obsidian-callout";
-// import remarkWikiLink from "remark-wiki-link";
-// import rehypeRaw from "rehype-raw";
-// // import rehypeKatex from "rehype-katex";
-// import rehypeMathToTex from "@/lib/rehype-math-to-tex";
+import { notFound, redirect } from "next/navigation";
+import matter from "gray-matter";
+import { serialize } from "next-mdx-remote/serialize";
 
 import "@/app/markdown.css";
 import "@/app/math.css";
-import InlineLink from "@/app/ui/inline-link";
-import MathJaxComponent from "@/components/mathjax-component";
-import TikzBlock from "@/components/tikz-block";
-import { useTheme } from "@/contexts/theme-context";
-import Image from "next/image";
-import { firaCode } from "@/app/ui/fonts";
-import clsx from "clsx";
-
-import {
-  FolderOpenIcon,
-  DocumentTextIcon,
-  ChevronLeftIcon,
-  Bars3Icon,
-  AcademicCapIcon,
-} from "@heroicons/react/24/outline";
+import DocClient from "./client";
+import getGitHubDir from "@/lib/github/get-github-dir";
+import getGitHubFile from "@/lib/github/get-github-file";
+import processMdx from "@/lib/mdx/process-mdx";
 
 /**
  * Types for GitHub API responses
  * GitHub API 响应的类型定义
  */
 interface GitHubDirectoryDetailTerm {
-  // represents a file or directory
   name: string;
   type: string;
   path: string;
   children?: GitHubDirectoryDetailTerm[];
 }
-interface DocResponse {
-  type: "DIR" | "FILE";
-  // represents a directory listing
-  details?: GitHubDirectoryDetailTerm[];
-  // represents a markdown document
-  title?: string;
-  content?: MDXRemoteSerializeResult;
-  url?: string;
-}
 
-function readTextContent(node: unknown): string {
-  if (typeof node === "string") {
-    return node;
+type DocResponse =
+  | {
+      kind: "mdx";
+      title: string;
+      source: string;
+      options?: any;
+    }
+  | {
+      kind: "pdf" | "image" | "other";
+      title: string;
+      url: string;
+    };
+
+type PageParams = {
+  params: Promise<{ slug?: string[] }>;
+};
+
+/**
+ * 解析 slug 为各个组件。
+ * @param slug URL 中的 slug 部分，形如 [semester, course, ...docPath]
+ */
+function parseSlug(slug?: string[]) {
+  if (!slug || slug.length === 0) {
+    return { semester: "", course: "", docPath: "", fullPath: "" };
   }
 
-  if (Array.isArray(node)) {
-    return node.map(readTextContent).join("");
-  }
-
-  if (
-    isValidElement<{ children?: unknown }>(node) &&
-    Object.prototype.hasOwnProperty.call(node.props, "children")
-  ) {
-    return readTextContent(node.props.children);
-  }
-
-  return "";
-}
-
-function extractTikzFence(children: unknown) {
-  const onlyChild =
-    Children.count(children) === 1 ? Children.only(children) : null;
-
-  if (
-    !onlyChild ||
-    !isValidElement<{ className?: string; children?: unknown }>(onlyChild)
-  ) {
-    return null;
-  }
-
-  const className = onlyChild.props.className || "";
-  if (!className.includes("language-tikz")) {
-    return null;
-  }
+  const slugArray = Array.isArray(slug) ? slug : [slug];
+  const semester = decodeURIComponent(slugArray[0]);
+  const course = slugArray.length > 1 ? decodeURIComponent(slugArray[1]) : "";
+  const docPath =
+    slugArray.length > 2 ?
+      decodeURIComponent(slugArray.slice(2).join("/"))
+    : "";
 
   return {
-    className,
-    source: readTextContent(onlyChild.props.children)
-      .trim()
-      .replaceAll("\\begin{tikzpicture}\n", "\\begin{tikzpicture}[scale=0.8]\n")
-      .replaceAll("\\Large", "")
-      .replaceAll("\\large", ""),
+    semester,
+    course,
+    docPath,
+    fullPath: decodeURIComponent(slugArray.join("/")),
   };
 }
 
 /**
- * Course list as a dropdown component.
- * 显示为下拉菜单的课程列表组件。
+ * 根据文件名推断非文本文件类型，返回 "pdf"、"image" 或 "other"
+ * @param fileName 文件名
  */
-function CourseDropdown({
-  courses,
-  currentCourse,
-  onSelect,
-}: {
-  courses: GitHubDirectoryDetailTerm[];
-  currentCourse?: string;
-  onSelect: (course: string) => void;
-}) {
-  return (
-    <div className="mb-4 flex flex-row items-center space-x-2 text-[16px]">
-      <AcademicCapIcon className="h-6 w-6 text-[#660974] dark:text-purple-400" />
-      <select
-        value={currentCourse || ""}
-        onChange={(e) => onSelect(e.target.value)}
-        className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-700 shadow-sm focus:border-[#660974] focus:ring-1 focus:ring-[#660974] focus:outline-none dark:border-[#400649] dark:bg-[#400649] dark:text-gray-200 dark:focus:border-purple-400 dark:focus:ring-purple-400">
-        <option value="" disabled className="text-sm italic">
-          Select a course
-        </option>
-        {courses.map((course) => (
-          <option key={course.path} value={course.name}>
-            {course.name}
-          </option>
-        ))}
-      </select>
-    </div>
-  );
+function inferDocKind(fileName: string): "pdf" | "image" | "other" {
+  const lower = fileName.toLowerCase();
+  if (lower.endsWith(".pdf")) {
+    return "pdf";
+  }
+
+  if (
+    lower.endsWith(".png") ||
+    lower.endsWith(".jpg") ||
+    lower.endsWith(".jpeg") ||
+    lower.endsWith(".gif") ||
+    lower.endsWith(".svg")
+  ) {
+    return "image";
+  }
+
+  return "other";
 }
 
 /**
- * Directory list component for navigating the file structure.
- * 目录列表组件，用于导航文件结构。
+ * 解析目录结构，找到合适的目标文件路径进行重定向
+ *
+ * 规则如下：
+ * 1. 优先寻找 index.md、index.mdx、readme.md、readme.mdx 作为目录的默认文档
+ * 2. 如果没有上述文件，寻找第一个文本文件（.md/.mdx）作为默认文档
+ * 3. 如果没有文本文件，返回第一个文件（无论类型）作为默认文档
+ * 4. 如果目录下没有任何文件，返回 undefined
+ * @param details 目录详情列表
+ * @returns 目标文件路径或 undefined
  */
-function RecursiveDirectoryList({
-  semester,
-  items,
-  onSelect,
-  currentPath,
-  leftMargin = 0,
-}: {
-  semester: string;
-  items: GitHubDirectoryDetailTerm[];
-  onSelect: (path: string) => void;
-  currentPath?: string;
-  leftMargin?: number;
-}) {
-  return (
-    <ul
-      className="space-y-0.5 border-l border-gray-200 dark:border-gray-700"
-      style={{ marginLeft: leftMargin }}>
-      {items.map((item) => (
-        // 每个文件或目录项
-        <li
-          key={item.path === "<scene>" ? item.path + Math.random() : item.path}>
-          {
-            item.type === "file" ?
-              // 文件项
-              item.name.startsWith(".") ?
-                null
-              : <button
-                  className={`group flex w-full items-center rounded-md px-2 py-1.5 text-left text-sm transition-colors ${
-                    currentPath === `${semester}/${item.path}` ?
-                      "bg-purple-100 font-medium text-[#660974] dark:bg-[#41044a] dark:text-purple-200"
-                    : "text-gray-600 hover:bg-purple-50 hover:text-[#660974] dark:text-gray-300 hover:dark:bg-[#41044a] hover:dark:text-purple-200"
-                  } `}
-                  onClick={() => onSelect(item.path)}>
-                  <DocumentTextIcon className="mr-2 h-4 w-4 shrink-0 text-gray-400 group-hover:text-purple-200" />
-                  <span className="truncate">
-                    {item.name.endsWith(".mdx") ?
-                      item.name.slice(0, -4)
-                    : item.name.endsWith(".md") ?
-                      item.name.slice(0, -3)
-                    : item.name}
-                  </span>
-                </button>
-
-              // 目录项
-            : item.name.startsWith(".") ?
-              null
-            : <div className="select-none">
-                {item.name === "<scene>" ? null : (
-                  <div className="flex items-center px-2 py-1.5 text-sm font-medium text-gray-900 dark:text-gray-100">
-                    <FolderOpenIcon className="mr-2 h-4 w-4 shrink-0 text-gray-400" />
-                    <span className="truncate">{item.name}/</span>
-                  </div>
-                )}
-                {item.children && (
-                  <RecursiveDirectoryList
-                    semester={semester}
-                    items={item.children}
-                    onSelect={onSelect}
-                    currentPath={currentPath}
-                    leftMargin={25}
-                  />
-                )}
-              </div>
-
-          }
-        </li>
-      ))}
-    </ul>
+function resolveDirectoryTarget(details: GitHubDirectoryDetailTerm[]) {
+  const indexFile = details.find(
+    (entry) =>
+      entry.type === "file" &&
+      ["index.md", "index.mdx", "readme.md", "readme.mdx"].includes(
+        entry.name.toLowerCase(),
+      ),
   );
+  if (indexFile) {
+    return indexFile.path;
+  }
+
+  const firstFile = details.find((entry) => entry.type === "file");
+  if (firstFile) {
+    return firstFile.path;
+  }
+
+  return details[0]?.path;
 }
 
-export default function DocPage() {
-  const params = useParams();
-  const router = useRouter();
-  const { font } = useTheme();
-  const mathJaxFontName = font === "sans" ? "mathjax-fira" : "mathjax-tex";
+export default async function DocPage({ params }: PageParams) {
+  const resolvedParams = await params;
+  const {
+    semester,
+    course: currentCourse,
+    docPath,
+    fullPath,
+  } = parseSlug(resolvedParams.slug);
 
-  /**
-   * 解析 slug 参数
-   * @returns \{ `semester`: _string_; `course`: _string_; `docPath`: _string_; `fullPath`: _string_ \}
-   */
-  const getParams = () => {
-    // 处理空参数情况
-    if (!params?.slug)
-      return { semester: "", course: "", docPath: "", fullPath: "" };
+  const availableSemesters = [
+    "23Autumn",
+    "24Spring",
+    "24Autumn",
+    "25Spring",
+    "25Autumn",
+    "26Spring",
+  ];
+  if (!semester || !availableSemesters.includes(semester)) {
+    console.error(
+      "Catch-all route requires at least 1 segment of path as `semester`, but got:\n路由至少需要一个路径段作为 `semester`，但实际解析到的参数为：",
+      resolvedParams.slug,
+    );
+    notFound();
+  }
 
-    const slugArray = Array.isArray(params.slug) ? params.slug : [params.slug];
-    // slug 结构：semester/course/doc-path
-    const semester = decodeURIComponent(slugArray[0]);
-    const course = slugArray.length > 1 ? decodeURIComponent(slugArray[1]) : "";
-    // 剩余部分重新组合为路径，如果只有一级则 docPath 为空
-    const docPath =
-      slugArray.length > 2 ?
-        decodeURIComponent(slugArray.slice(2).join("/"))
-      : "";
+  const coursesDir = await getGitHubDir(semester, "/", false);
+  const courses =
+    coursesDir?.type === "DIR" && coursesDir.details ?
+      coursesDir.details.filter((item) => item.type === "dir")
+    : [];
 
-    return {
-      semester,
-      course,
-      docPath,
-      fullPath: decodeURIComponent(slugArray.join("/")),
-    };
-  };
-
-  const { semester, course: currentCourse, docPath, fullPath } = getParams();
-
-  /**
-   * State variables & their setter functions
-   * 状态变量及其设置函数
-   */
-  // 一级目录列表
-  const [courses, setCourses] = useState<GitHubDirectoryDetailTerm[]>([]);
-  // 当前课程的详细结构
-  const [courseStructure, setCourseStructure] = useState<
-    GitHubDirectoryDetailTerm[]
-  >([]);
-  // 当前页面显示的文档内容
-  const [doc, setDoc] = useState<DocResponse | null>(null);
-  // 已经加载的文档路径
-  const [loadedPath, setLoadedPath] = useState<string | null>(null);
-
-  // 控制加载状态
-  const [isLoadingDoc, setIsLoadingDoc] = useState(false);
-  // 控制错误状态
-  const [error, setError] = useState<string | null>(null);
-
-  // 控制侧边栏开关的状态
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  // 控制页眉缩小的状态
-  const [isShrunk, setIsShrunk] = useState(false);
-
-  // 滚动事件
-  useEffect(() => {
-    const handleScroll = () => {
-      if (window.scrollY > 50) {
-        setIsShrunk(true);
-        setIsSidebarOpen(false);
-      } else {
-        setIsShrunk(false);
-      }
-    };
-
-    window.addEventListener("scroll", handleScroll);
-
-    // Cleanup function to remove the event listener
-    return () => {
-      window.removeEventListener("scroll", handleScroll);
-    };
-  }, []); // Empty dependency array means this effect runs once on mount
-
-  // 初始获取所有一级目录（课程列表）
-  useEffect(() => {
-    const fetchCourses = async () => {
-      try {
-        // 获取根目录内容
-        const res = await fetch(`/api/get-doc?semester=${semester}&page=/`);
-        if (!res.ok) {
-          throw new Error(
-            `Failed to fetch courses due to ${res.statusText}: ${await res.text()}`,
-          );
-        }
-
-        const data: DocResponse = await res.json();
-        if (data.type !== "DIR") {
-          throw new Error("Expected a directory response for courses");
-        }
-
-        // 过滤出跟目录下的每个目录作为课程列表
-        const courseList =
-          data.details?.filter((item) => item.type === "dir") || [];
-        setCourses(courseList);
-      } catch (e) {
-        console.error("Failed to fetch courses", e);
-      }
-    };
-    fetchCourses();
-  }, []);
-
-  // 当 currentCourse 变化时，获取该课程的详细结构
-  useEffect(() => {
-    // 如果没有选中课程则不执行
-    if (!semester || !currentCourse) return;
-
-    const fetchCourseStructure = async (
-      curSemester: string,
-      curDir: string,
-    ) => {
-      // 使用 recursive 参数调用 get-doc API 获取完整目录结构
-      const res = await fetch(
-        `/api/get-doc?semester=${curSemester}&page=${curDir}&recursive=true`,
-      );
-      if (!res.ok) {
-        console.error(
-          `Failed to fetch ${curSemester} course "${curDir}" structure: ${res.statusText}`,
-        );
-        return;
-      }
-      const data: DocResponse = await res.json();
-      if (data.type !== "DIR" || !data.details) {
-        console.error("Expected a directory response for course structure");
-        return;
-      }
-
-      // 直接使用返回的目录结构
-      setCourseStructure(data.details);
-    };
-
-    fetchCourseStructure(semester, currentCourse);
-  }, [semester, currentCourse]);
-
-  // 获取文档内容
-  useEffect(() => {
-    const fetchDoc = async () => {
-      // 如果没有路径则不执行
-      if (!fullPath) return;
-
-      setIsLoadingDoc(true);
-      setError(null);
-
-      try {
-        console.debug(`Fetching document for path: ${fullPath}`, {
-          url: `/api/get-doc?semester=${semester}&page=${currentCourse}/${docPath}`,
-          semester,
-          currentCourse,
-          docPath,
-        });
-        const res = await fetch(
-          `/api/get-doc?semester=${semester}&page=${currentCourse}/${docPath}`,
-        );
-        if (!res.ok) {
-          throw new Error(
-            `Failed to fetch document ${currentCourse}/${docPath}: ${res.statusText}`,
-          );
-        }
-        const data: DocResponse = await res.json();
-
-        if (data.type === "DIR") {
-          // 目录
-          // 不需要更新 courseStructure，上面已经加载全量结构
-          // 只需要处理路由跳转，防止用户停留在空白的文件夹页面
-          if (data.details && data.details.length > 0) {
-            // 查找 index.md 或 README.md 文件
-            const indexFile = data.details.find(
-              (d) =>
-                d.type === "file" &&
-                (d.name.toLowerCase() === "index.md" ||
-                  d.name.toLowerCase() === "readme.md"),
-            );
-            if (indexFile) {
-              // 替换当前 URL，不推入历史记录以免回退死循环
-              setDoc(null);
-              setIsLoadingDoc(false);
-              router.replace(`/${semester}/${indexFile.path}`);
-              return;
-            }
-            // 未找到，则查找第一个文件
-            const firstFile = data.details.find((d) => d.type === "file");
-            if (firstFile) {
-              // 替换当前 URL，不推入历史记录以免回退死循环
-              setDoc(null);
-              router.replace(`/${semester}/${firstFile.path}`);
-            } else {
-              // 只有文件夹，进入第一个文件夹
-              const firstDir = data.details[0];
-              setDoc(null);
-              router.replace(`/${semester}/${firstDir.path}`);
-            }
-          }
-        } else if (data.type === "FILE") {
-          // 是文档
-          setDoc(data);
-          setLoadedPath(fullPath);
-        } else {
-          throw new Error(
-            `Failed to fetch due to ${res.statusText}: Unknown document type`,
-          );
-        }
-      } catch (e: any) {
-        setError(e.message || "Unknown error");
-        setDoc(null);
-      } finally {
-        setIsLoadingDoc(false);
-      }
-    };
-
-    fetchDoc();
-  }, [fullPath, router]);
-
-  /**
-   * Overrides the default MDX components with custom ones.
-   * 覆盖默认的 MDX 组件以使用自定义组件。
-   */
-  const overrideComponents: MDXComponents = {
-    ...components,
-    pre: ({ children, ...props }) => {
-      const tikzFence = extractTikzFence(children);
-      if (tikzFence?.source) {
-        return <TikzBlock source={tikzFence.source} />;
-      }
-
-      return (
-        <pre
-          className={`doc-pre overflow-x-auto rounded-2xl px-4 py-3 ${firaCode.className}`}
-          {...props}>
-          {children}
-        </pre>
-      );
-    },
-    code: ({ children, className, ...props }) => {
-      if (className?.includes("language-tikz")) {
-        return (
-          <code className={clsx(className, firaCode.className)} {...props}>
-            {children}
-          </code>
-        );
-      }
-
-      if (!className) {
-        return (
-          <code
-            className={clsx(
-              "rounded-md bg-black/8 px-1.5 py-0.5 text-[0.9em] dark:bg-white/10",
-              firaCode.className,
-            )}
-            {...props}>
-            {children}
-          </code>
-        );
-      }
-
-      return (
-        <code className={clsx(className, firaCode.className)} {...props}>
-          {children}
-        </code>
-      );
-    },
-    a: ({ children, href, ...props }) => {
-      let finalHref = href || "";
-      // 处理 wiki:// 链接
-      if (href && href.startsWith("wiki://#")) {
-        finalHref = href.replace("wiki://#", `/${fullPath}#`);
-        if (children && typeof children === "string") {
-          children = children.replace("#", "");
-        }
-      } else if (href && href.startsWith("wiki://")) {
-        finalHref = href.replace("wiki://", `/${semester}/${currentCourse}/`);
-      }
-      // 处理空格编码问题
-      finalHref = finalHref.replace(/_/g, " ");
-      return (
-        <InlineLink href={finalHref} {...props}>
-          {children}
-        </InlineLink>
-      );
-    },
-    img: ({ alt, src, ...props }) => {
-      let finalSrc = src || "";
-      // 处理 wiki:// 链接
-      if (src && src.startsWith("wiki://")) {
-        const filename = src.replace("wiki://", "");
-        finalSrc = `/api/get-asset?semester=${encodeURIComponent(semester)}&page=${encodeURIComponent(currentCourse + "/res/" + filename)}`;
-      }
-      return (
-        <Image
-          src={finalSrc}
-          alt={alt || ""}
-          width={1600}
-          height={900}
-          sizes="(min-width: 1024px) 896px, 100vw"
-          unoptimized
-          {...props}
-          className="mx-auto max-w-full rounded-2xl border border-gray-300 bg-white/75 dark:border-gray-600"
-        />
-      );
-    },
-  };
-
-  /**
-   * Render loading, error, or document content
-   * 渲染加载中、错误信息或文档内容
-   */
-  const renderMessageOrContent = () => {
-    // 状态信息
-    if (error) {
-      return <div className="text-red-500">Error: {error}</div>;
+  // 获取当前课程的目录结构以供侧边栏使用
+  let courseStructure: GitHubDirectoryDetailTerm[] = [];
+  if (currentCourse) {
+    const structure = await getGitHubDir(semester, currentCourse, true);
+    if (structure?.type === "DIR" && structure.details) {
+      courseStructure = structure.details;
     }
-    if (fullPath !== loadedPath || isLoadingDoc) {
-      return <div className="text-gray-500">Loading the document...</div>;
-    }
-    if (!doc || (!doc.content && !doc.url)) {
-      return <div className="text-gray-500">No documents are available.</div>;
+  }
+
+  // 获取当前文档内容
+  let doc: DocResponse | null = null;
+  if (currentCourse) {
+    const requestPath =
+      docPath ? `${currentCourse}/${docPath}` : `${currentCourse}/`;
+    const fileData = await getGitHubFile(semester, requestPath);
+
+    // 如果直接请求的路径没有文件，尝试解析为目录并寻找默认文档进行重定向
+    if (!fileData) {
+      const directory = await getGitHubDir(semester, requestPath, false);
+      if (!directory?.details?.length) {
+        notFound();
+      }
+
+      const target = resolveDirectoryTarget(directory.details);
+      if (!target) {
+        notFound();
+      }
+
+      redirect(`/${semester}/${target}`);
     }
 
-    // 文档内容
-    console.log("Rendering document:", doc);
-    if (
-      doc.content &&
-      (!doc.title || doc.title.endsWith(".mdx") || doc.title.endsWith(".md"))
-    ) {
-      // MDX 文件
-      return (
-        <div key={fullPath}>
-          <article className="prose dark:prose-invert lg:prose-xl">
-            <components.h1>{doc.title?.replace(/\.mdx?$/, "")}</components.h1>
-            <div className="mathjax-wrapper-isolation">
-              <MathJaxComponent
-                fontName={mathJaxFontName}
-                key={`${fullPath}:${mathJaxFontName}`}
-                renderKey={`${fullPath}:${mathJaxFontName}`}>
-                <MDXRemote {...doc.content} components={overrideComponents} />
-              </MathJaxComponent>
-            </div>
-          </article>
-        </div>
+    // 根据文件名和内容判断文档类型，如果是 MDX 则进行处理，否则直接提供下载链接
+    const lowerName = fileData.fileName.toLowerCase();
+    const filePath = docPath ? `${currentCourse}/${docPath}` : currentCourse;
+
+    if (lowerName.endsWith(".md") || lowerName.endsWith(".mdx")) {
+      const { source, frontmatter, options } = await processMdx(
+        fileData as { contentDecoded: string; fileName: string },
       );
-    } else if (doc.title && doc.title.endsWith(".pdf")) {
-      // PDF 文件
-      if (!doc.url) {
-        return (
-          <div className="text-gray-500">
-            No URL available for the PDF document.
-          </div>
-        );
-      }
-      return (
-        <div key={fullPath} className="my-8">
-          <article className="prose dark:prose-invert lg:prose-xl">
-            <components.h1>{doc.title}</components.h1>
-            <iframe
-              src={doc.url}
-              title={doc.title}
-              width="100%"
-              height="800px"
-              className="border border-gray-300 dark:border-gray-600"
-            />
-          </article>
-        </div>
-      );
-    } else if (
-      doc.title &&
-      (doc.title.endsWith(".png") ||
-        doc.title.endsWith(".jpg") ||
-        doc.title.endsWith(".jpeg") ||
-        doc.title.endsWith(".gif") ||
-        doc.title.endsWith(".svg"))
-    ) {
-      // 图片文件
-      if (!doc.url) {
-        return (
-          <div className="text-gray-500">
-            No URL available for the image document.
-          </div>
-        );
-      }
-      return (
-        <div key={fullPath} className="my-8">
-          <article className="prose dark:prose-invert lg:prose-xl">
-            <components.h1>{doc.title}</components.h1>
-            <Image
-              src={doc.url}
-              alt={doc.title}
-              width={1600}
-              height={900}
-              sizes="(min-width: 1024px) 896px, 100vw"
-              unoptimized
-              className="mx-auto max-w-full rounded-2xl border border-gray-300 bg-white/75 dark:border-gray-600"
-            />
-          </article>
-        </div>
-      );
+
+      doc = {
+        kind: "mdx",
+        title: frontmatter.title || fileData.fileName,
+        source,
+      };
     } else {
-      return <div className="text-gray-500">Unsupported document type.</div>;
+      doc = {
+        kind: inferDocKind(fileData.fileName),
+        title: fileData.fileName,
+        url: `/api/get-asset?semester=${encodeURIComponent(semester)}&page=${encodeURIComponent(filePath)}`,
+      };
     }
-  };
+  }
 
   return (
-    <div className="min-h-screen">
-      <aside
-        className={` ${isSidebarOpen ? "w-72 border-r" : "w-0"} fixed left-0 z-40 shrink-0 overflow-hidden border-gray-200 bg-[#fbdfffd0] transition-all duration-300 ease-in-out dark:border-gray-400 dark:bg-[#0d010fD0] ${
-          isShrunk ?
-            "top-32 h-[calc(100vh-128px)]"
-          : "top-56 h-[calc(100vh-224px)]"
-        }`}>
-        <div className="scrollbar-thin h-full w-72 overflow-y-auto p-6">
-          {/* 标题 */}
-          <div className="mb-6 flex items-center justify-between">
-            <h2 className="text-xl font-bold text-gray-700 dark:text-gray-200">
-              Contents
-            </h2>
-            <button
-              onClick={() => setIsSidebarOpen(false)}
-              className="rounded-md bg-[#1e293944] p-2 transition-colors hover:bg-purple-200 hover:text-[#660974] hover:dark:bg-[#41044a] hover:dark:text-purple-200"
-              title="收起">
-              <ChevronLeftIcon className="h-5 w-5 text-gray-500" />
-            </button>
-          </div>
-
-          {/* 课程列表 */}
-          <CourseDropdown
-            courses={courses}
-            currentCourse={currentCourse}
-            onSelect={(course) => router.push(`/${semester}/${course}`)}
-          />
-
-          {/* 目录列表 */}
-          <RecursiveDirectoryList
-            semester={semester}
-            items={courseStructure}
-            onSelect={(path) => router.push(`/${semester}/${path}`)}
-            currentPath={fullPath}
-          />
-        </div>
-      </aside>
-
-      {/* 主要内容区域 */}
-      <main className="relative mx-auto max-w-4xl min-w-0 content-center px-14 md:px-28">
-        {/* 当侧边栏关闭时显示的展开按钮 */}
-        <button
-          onClick={() => setIsSidebarOpen(true)}
-          className={`fixed left-4 ${
-            isShrunk ? "top-36" : "top-60"
-          } rounded-md border border-gray-400 bg-[#1e293944] p-2 transition-all duration-300 ease-in-out hover:bg-purple-200 hover:text-[#660974] hover:dark:bg-[#41044a] hover:dark:text-purple-200 ${isSidebarOpen ? "-z-50 opacity-0" : "z-50 opacity-100"} `}
-          title="展开">
-          <Bars3Icon className="h-5 w-5" />
-        </button>
-
-        {renderMessageOrContent()}
-      </main>
-    </div>
+    <DocClient
+      semester={semester}
+      currentCourse={currentCourse}
+      fullPath={fullPath}
+      courses={courses}
+      courseStructure={courseStructure}
+      doc={doc}
+    />
   );
 }

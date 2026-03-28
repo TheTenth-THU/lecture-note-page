@@ -8,14 +8,12 @@ interface ParentNode {
   children?: RubyNodeChild[];
 }
 
-interface MdxJsxTextElementNode {
-  type: "mdxJsxTextElement";
-  name: string;
-  attributes: [];
-  children: RubyNodeChild[];
+interface HtmlNode {
+  type: "html";
+  value: string;
 }
 
-type RubyNodeChild = TextNode | ParentNode | MdxJsxTextElementNode;
+type RubyNodeChild = TextNode | ParentNode | HtmlNode;
 
 type Atom =
   | {
@@ -52,6 +50,10 @@ function isParentNode(node: unknown): node is ParentNode {
 
 function isTextNode(node: RubyNodeChild): node is TextNode {
   return node.type === "text";
+}
+
+function isHtmlNode(node: RubyNodeChild): node is HtmlNode {
+  return node.type === "html";
 }
 
 function flattenChildren(children: RubyNodeChild[]): Atom[] {
@@ -117,35 +119,55 @@ function hasLineBreak(atoms: Atom[]): boolean {
   );
 }
 
-function createRubyNode(
-  baseChildren: RubyNodeChild[],
-  rubyChildren: RubyNodeChild[],
-): MdxJsxTextElementNode {
+function escapeHtml(value: string): string {
+  return value
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
+function stringifyNode(node: RubyNodeChild): string {
+  if (isTextNode(node)) {
+    return node.value;
+  }
+
+  if (isHtmlNode(node)) {
+    return node.value;
+  }
+
+  if (isParentNode(node) && Array.isArray(node.children)) {
+    return node.children.map(stringifyNode).join("");
+  }
+
+  return "";
+}
+
+function stringifyAtoms(atoms: Atom[]): string {
+  return atoms
+    .map((atom) => {
+      if (atom.type === "char") {
+        return atom.value;
+      }
+
+      return stringifyNode(atom.node);
+    })
+    .join("");
+}
+
+function createRubyNode(baseAtoms: Atom[], rubyAtoms: Atom[]): HtmlNode {
+  const baseText = escapeHtml(stringifyAtoms(baseAtoms));
+  const rubyText = escapeHtml(stringifyAtoms(rubyAtoms));
+
   return {
-    type: "mdxJsxTextElement",
-    name: "ruby",
-    attributes: [],
-    children: [
-      ...baseChildren,
-      {
-        type: "mdxJsxTextElement",
-        name: "rt",
-        attributes: [],
-        children: rubyChildren,
-      },
-    ],
+    type: "html",
+    value: `<ruby>${baseText}<rt>${rubyText}</rt></ruby>`,
   };
 }
 
 function isCharAtom(atom: Atom | undefined, value: string): boolean {
   return atom?.type === "char" && atom.value === value;
-}
-
-function createStrongNode(children: RubyNodeChild[]): ParentNode {
-  return {
-    type: "strong",
-    children,
-  };
 }
 
 function transformChildren(children: RubyNodeChild[]): RubyNodeChild[] {
@@ -202,10 +224,7 @@ function transformChildren(children: RubyNodeChild[]): RubyNodeChild[] {
       continue;
     }
 
-    const rubyNode = createRubyNode(
-      atomsToNodes(baseAtoms),
-      atomsToNodes(rubyAtoms),
-    );
+    const rubyNode = createRubyNode(baseAtoms, rubyAtoms);
 
     const wrappedByStrong =
       transformedAtoms.length >= 2 &&
@@ -219,7 +238,10 @@ function transformChildren(children: RubyNodeChild[]): RubyNodeChild[] {
       transformedAtoms.pop();
       transformedAtoms.push({
         type: "node",
-        node: createStrongNode([rubyNode]),
+        node: {
+          type: "html",
+          value: `<strong>${rubyNode.value}</strong>`,
+        },
       });
       index = closingIndex + 3;
       continue;
@@ -241,11 +263,7 @@ function visitRubyCandidates(node: ParentNode) {
   }
 
   for (const child of node.children) {
-    if (
-      isParentNode(child) &&
-      child.type !== "mdxJsxTextElement" &&
-      child.type !== "mdxJsxFlowElement"
-    ) {
+    if (isParentNode(child)) {
       visitRubyCandidates(child);
     }
   }
