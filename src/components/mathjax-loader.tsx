@@ -48,11 +48,18 @@ function getVectorMacro(vectorStyle: VectorStyle): [string, number] {
 function getTexMacros(
   vectorStyle: VectorStyle,
 ): Record<string, string | [string, number]> {
-  // 微积分
   return {
+    // 微积分
     dif: "{\\mathop{}\\!\\mathrm{d}}",
     Dif: "{\\mathop{}\\!\\mathrm{D}}",
     dint: "{\\displaystyle\\int}",
+    // 分式
+    frac: [
+      "{\mathchoice{\genfrac{}{}{}{0}{#1}{#2}}{\genfrac{}{}{}{1}{\textstyle #1}{\textstyle #2}}{\genfrac{}{}{}{2}{\scriptstyle #1}{\scriptstyle #2}}{\genfrac{}{}{}{3}{\scriptscriptstyle #1}{\scriptscriptstyle #2}}}",
+      2,
+    ],
+    dfrac: ["{\genfrac{}{}{}{1}{\textstyle #1}{\textstyle #2}}", 2],
+    tfrac: ["{\genfrac{}{}{}{2}{\scriptstyle #1}{\scriptstyle #2}}", 2],
     // 向量
     v: getVectorMacro(vectorStyle),
     vu: ["{\\hat{\\boldsymbol{#1}}}", 1],
