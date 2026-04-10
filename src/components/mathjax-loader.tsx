@@ -55,11 +55,11 @@ function getTexMacros(
     dint: "{\\displaystyle\\int}",
     // 分式
     frac: [
-      "{\mathchoice{\genfrac{}{}{}{0}{#1}{#2}}{\genfrac{}{}{}{1}{\textstyle #1}{\textstyle #2}}{\genfrac{}{}{}{2}{\scriptstyle #1}{\scriptstyle #2}}{\genfrac{}{}{}{3}{\scriptscriptstyle #1}{\scriptscriptstyle #2}}}",
+      "{\\mathchoice{\\genfrac{}{}{}{0}{#1}{#2}}{\\genfrac{}{}{}{1}{\\textstyle #1}{\\textstyle #2}}{\\genfrac{}{}{}{2}{\\scriptstyle #1}{\\scriptstyle #2}}{\\genfrac{}{}{}{3}{\\scriptscriptstyle #1}{\\scriptscriptstyle #2}}}",
       2,
     ],
-    dfrac: ["{\genfrac{}{}{}{1}{\textstyle #1}{\textstyle #2}}", 2],
-    tfrac: ["{\genfrac{}{}{}{2}{\scriptstyle #1}{\scriptstyle #2}}", 2],
+    dfrac: ["{\\genfrac{}{}{}{1}{\\textstyle #1}{\\textstyle #2}}", 2],
+    tfrac: ["{\\genfrac{}{}{}{2}{\\scriptstyle #1}{\\scriptstyle #2}}", 2],
     // 向量
     v: getVectorMacro(vectorStyle),
     vu: ["{\\hat{\\boldsymbol{#1}}}", 1],
